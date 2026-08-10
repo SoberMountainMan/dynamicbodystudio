@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Dynamic Body Studio | Pilates &amp; Movement Studio, East London</title>
+<meta name="description" content="The Dynamic Body Studio is a boutique Pilates and movement studio in Dorchester Heights, East London. Reformer Pilates, Barre, Pound and more. Enquire on WhatsApp.">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#68ADD9; --blue-soft:#93B1D4; --pink:#E75B98;
+    --charcoal:#5D5F5E; --ink:#333; --bg:#FEFEFE; --soft:#F5F5F5;
+    --serif:"Bodoni Moda", Georgia, serif; --sans:"DM Sans", system-ui, sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--charcoal);background:var(--bg);line-height:1.6}
+  img{max-width:100%;display:block}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+  /* Nav */
+  header{position:sticky;top:0;background:rgba(254,254,254,.96);backdrop-filter:blur(6px);border-bottom:1px solid #eee;z-index:10}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+  .nav img{height:44px;width:auto}
+  .nav nav{display:flex;gap:22px}
+  .nav a{color:var(--charcoal);text-decoration:none;font-weight:500;font-size:.95rem}
+  .nav a:hover{color:var(--blue)}
+  @media(max-width:640px){.nav nav{display:none}}
+
+  /* Hero */
+  .hero{background:linear-gradient(180deg,var(--soft),var(--bg));text-align:center;padding:72px 24px 64px}
+  .hero img{height:150px;width:auto;margin:0 auto 28px}
+  .hero h1{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(1.9rem,5vw,3rem);line-height:1.15;margin-bottom:14px}
+  .hero p{max-width:560px;margin:0 auto 30px;font-size:1.05rem}
+  .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .btn{display:inline-block;padding:14px 28px;border-radius:999px;text-decoration:none;font-weight:700;font-size:1rem;transition:transform .15s ease}
+  .btn:hover{transform:translateY(-2px)}
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-secondary{background:#fff;color:var(--charcoal);border:1.5px solid var(--blue-soft)}
+
+  section{padding:64px 0}
+  h2{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(1.5rem,3.5vw,2.1rem);margin-bottom:12px}
+  .lead{max-width:640px;margin-bottom:32px}
+
+  /* Classes */
+  .classes{background:var(--soft)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px}
+  .card{background:#fff;border-radius:14px;padding:24px 18px;text-align:center;border-top:3px solid var(--blue)}
+  .card:nth-child(even){border-top-color:var(--pink)}
+  .card h3{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:1.15rem;margin-bottom:6px}
+  .card p{font-size:.9rem}
+
+  /* Visit */
+  .visit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px}
+  .vcard{background:#fff;border:1px solid #eee;border-radius:14px;padding:26px}
+  .vcard h3{font-family:var(--serif);font-weight:500;color:var(--ink);margin-bottom:10px}
+  .vcard a{color:var(--blue);text-decoration:none;font-weight:500}
+  .vcard a:hover{text-decoration:underline}
+
+  /* Socials */
+  .socials{background:var(--soft);text-align:center}
+  .socials .cta-row{margin-top:8px}
+
+  footer{background:var(--charcoal);color:#e8e8e8;padding:36px 0;text-align:center;font-size:.9rem}
+  footer a{color:var(--blue-soft);text-decoration:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <img src="assets/logo-wide.png" alt="The Dynamic Body Studio">
+    <nav>
+      <a href="#classes">Classes</a>
+      <a href="#about">About</a>
+      <a href="#visit">Visit</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <img src="assets/logo.png" alt="The Dynamic Body Studio logo">
+  <h1>Move better. Feel stronger.<br>Find your balance.</h1>
+  <p>A boutique Pilates and movement studio in Dorchester Heights, East London.</p>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="https://wa.me/27615875852?text=Hi%2C%20I%27d%20like%20to%20enquire%20about%20classes%20at%20The%20Dynamic%20Body%20Studio.">Enquire on WhatsApp</a>
+    <a class="btn btn-secondary" href="https://maps.google.com/?q=The+Dynamic+Body+Studio,+12+Strangers+Way,+Dorchester+Heights,+East+London">Get directions</a>
+  </div>
+</section>
+
+<section id="classes" class="classes">
+  <div class="wrap">
+    <h2>Our classes</h2>
+    <p class="lead">Small, personal classes focused on strength, flexibility and feeling better &mdash; all fitness levels welcome.</p>
+    <div class="grid">
+      <div class="card"><h3>Reformer Pilates</h3><p>Intimate groups of six on the reformer.</p></div>
+      <div class="card"><h3>Pilates</h3><p>Mat-based strength, control and mobility.</p></div>
+      <div class="card"><h3>Barre</h3><p>Ballet-inspired tone and balance.</p></div>
+      <div class="card"><h3>Pound</h3><p>High-energy rhythm and cardio.</p></div>
+      <div class="card"><h3>Hips n Heels</h3><p>Strength and confidence, heels on.</p></div>
+      <div class="card"><h3>Zumba</h3><p>Dance-led cardio for everyone.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap">
+    <h2>About the studio</h2>
+    <p class="lead">The Dynamic Body Studio is a boutique movement studio built around balance &mdash; strength and flexibility, effort and recovery. We keep classes small so every person gets real attention, whether it&rsquo;s your first session or your hundredth. Questions? Message Vicky on WhatsApp.</p>
+  </div>
+</section>
+
+<section id="visit" class="classes">
+  <div class="wrap">
+    <h2>Visit us</h2>
+    <div class="visit-grid">
+      <div class="vcard">
+        <h3>Address</h3>
+        <p>12 Strangers Way,<br>Dorchester Heights,<br>East London, 5241</p>
+        <p><a href="https://maps.google.com/?q=The+Dynamic+Body+Studio,+12+Strangers+Way,+Dorchester+Heights,+East+London">Open in Google Maps</a></p>
+      </div>
+      <div class="vcard">
+        <h3>Contact</h3>
+        <p><a href="https://wa.me/27615875852">WhatsApp: +27 61 587 5852</a></p>
+        <p><a href="tel:+27615875852">Call: +27 61 587 5852</a></p>
+        <p><a href="mailto:dbstudio12@gmail.com">dbstudio12@gmail.com</a></p>
+      </div>
+      <div class="vcard">
+        <h3>Hours</h3>
+        <p>Monday &ndash; Friday, 7:00 &ndash; 19:00.<br>Closed weekends.<br>See <a href="https://maps.google.com/?q=The+Dynamic+Body+Studio,+12+Strangers+Way,+Dorchester+Heights,+East+London">Google</a> for current hours.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="socials">
+  <div class="wrap">
+    <h2>Follow the studio</h2>
+    <p class="lead" style="margin:0 auto 24px">Timetables, prices and class announcements live on our socials.</p>
+    <div class="cta-row">
+      <a class="btn btn-secondary" href="https://www.instagram.com/thedynamicbodystudio/">Instagram</a>
+      <a class="btn btn-secondary" href="https://www.facebook.com/TheDynamicBodyStudio/">Facebook</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>The Dynamic Body Studio &middot; 12 Strangers Way, Dorchester Heights, East London</p>
+    <p><a href="https://wa.me/27615875852">WhatsApp</a> &middot; <a href="https://www.instagram.com/thedynamicbodystudio/">Instagram</a> &middot; <a href="https://www.facebook.com/TheDynamicBodyStudio/">Facebook</a></p>
+    <p style="margin-top:10px">&copy; 2026 The Dynamic Body Studio &middot; A WildLogic project</p>
+  </div>
+</footer>
+
+</body>
+</html>
