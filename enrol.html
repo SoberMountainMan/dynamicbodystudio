@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enrol — The Dynamic Body Studio</title>
+<meta name="description" content="Enrol at The Dynamic Body Studio — boutique Pilates and movement studio in Dorchester Heights, East London.">
+<link rel="canonical" href="https://dynamicbodystudio.co.za/enrol.html">
+<meta property="og:title" content="Enrol — The Dynamic Body Studio">
+<meta property="og:description" content="Boutique Pilates and movement studio in Dorchester Heights, East London.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dynamicbodystudio.co.za/enrol.html">
+<meta property="og:image" content="https://dynamicbodystudio.co.za/assets/logo.png">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#68ADD9; --blue-soft:#93B1D4; --pink:#E75B98;
+    --charcoal:#5D5F5E; --ink:#333; --bg:#FEFEFE; --soft:#F5F5F5;
+    --serif:"Bodoni Moda", Georgia, serif; --sans:"DM Sans", system-ui, sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--charcoal);background:var(--bg);line-height:1.6}
+  img{max-width:100%;display:block}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+
+  header{border-bottom:1px solid #eee;background:rgba(254,254,254,.96)}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+  .nav img{height:40px;width:auto}
+  .nav a{color:var(--charcoal);text-decoration:none;font-weight:500;font-size:.95rem}
+  .nav a:hover{color:var(--blue)}
+
+  .hero{text-align:center;padding:44px 20px 28px}
+  .hero h1{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(1.7rem,4.5vw,2.4rem);line-height:1.15;margin-bottom:10px}
+  .hero p{max-width:520px;margin:0 auto;font-size:1rem}
+
+  form{padding-bottom:60px}
+  fieldset{border:none;margin-bottom:26px}
+  legend{font-family:var(--serif);font-size:1.25rem;color:var(--ink);margin-bottom:4px;padding:0}
+  .hint{font-size:.85rem;color:#8a8c8b;margin-bottom:14px}
+
+  label{display:block;font-weight:500;font-size:.92rem;color:var(--ink);margin:16px 0 6px}
+  .req::after{content:" *";color:var(--pink)}
+  input[type=text],input[type=tel],textarea,select{
+    width:100%;padding:13px 14px;border:1.5px solid #e2e2e2;border-radius:10px;
+    font-family:var(--sans);font-size:1rem;color:var(--ink);background:#fff;
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue)}
+  textarea{min-height:92px;resize:vertical}
+
+  .opts{margin-top:6px}
+  .opt{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border:1.5px solid #e2e2e2;border-radius:10px;margin-bottom:8px;cursor:pointer;background:#fff}
+  .opt:hover{border-color:var(--blue-soft)}
+  .opt input{margin-top:4px;accent-color:var(--blue)}
+  .opt span{font-size:.95rem}
+
+  .consent{background:var(--soft);border-radius:12px;padding:18px;margin:8px 0 22px}
+  .consent p{font-size:.85rem;margin-bottom:12px}
+  .consent .opt{background:#fff}
+
+  .err{color:#c0392b;font-size:.85rem;margin-top:6px;display:none}
+
+  .submit-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .btn{display:inline-block;padding:14px 30px;border-radius:999px;text-decoration:none;font-weight:700;font-size:1rem;border:none;cursor:pointer;font-family:var(--sans)}
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-primary:hover{background:#5a9dc9}
+  .btn-secondary{background:#fff;color:var(--charcoal);border:1.5px solid var(--blue-soft)}
+
+  #thanks{display:none;background:var(--soft);border-radius:14px;padding:32px;text-align:center;margin:20px 0 60px}
+  #thanks h2{font-family:var(--serif);font-weight:500;color:var(--ink);margin-bottom:10px}
+  #thanks p{margin-bottom:18px}
+
+  .upload-note{background:#fff8fb;border:1.5px solid var(--pink);border-radius:12px;padding:14px 16px;font-size:.88rem;margin-bottom:20px}
+
+  footer{background:var(--charcoal);color:#e8e8e8;padding:30px 0;text-align:center;font-size:.88rem}
+  footer a{color:var(--blue-soft);text-decoration:none}
+
+  .btn-print{background:transparent;border:1.5px solid #ddd;color:var(--charcoal);padding:12px 22px;border-radius:999px;cursor:pointer;font-family:var(--sans);font-weight:500}
+
+  /* ---- Print: Vicky asked to print these ---- */
+  @media print{
+    header .nav a, .submit-row, .upload-note, footer, #thanks, .btn-print{display:none !important}
+    body{background:#fff;color:#000}
+    .hero{padding:0 0 16px}
+    .hero h1{font-size:22pt}
+    .opt{border:1px solid #999;background:#fff}
+    .consent{background:#fff;border:1px solid #ccc}
+    input[type=text],input[type=tel],textarea{border:1px solid #999;background:#fff}
+    fieldset,.consent{page-break-inside:avoid}
+    .print-head{display:block !important}
+  }
+  .print-head{display:none;font-size:.8rem;color:#8a8c8b;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <img src="assets/logo-wide.png" alt="The Dynamic Body Studio">
+    <a href="index.html">&larr; Back to site</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <h1>Join the studio</h1>
+    <p>Tell us a little about you and we&rsquo;ll confirm your class on WhatsApp.</p>
+  </div>
+</section>
+
+<div class="wrap">
+
+  <div id="thanks">
+    <h2>Thank you &mdash; your form is in.</h2>
+    <p>Vicky will confirm your spot on WhatsApp within a day.</p>
+    <div class="submit-row" style="justify-content:center">
+      <a class="btn btn-primary" href="https://wa.me/27615875852?text=Hi%20Vicky%2C%20I%20just%20sent%20my%20enrolment%20form.">Message Vicky on WhatsApp</a>
+      <a class="btn btn-secondary" href="index.html">Back to site</a>
+    </div>
+  </div>
+
+  <form id="enrol" method="post" target="hidden_iframe"
+        action="https://docs.google.com/forms/d/e/1FAIpQLScUjlphaXJ6ksgb_6ytG1qITaeXotwPHDWMG0FdgS-SIDGBfg/formResponse"
+        onsubmit="return submitForm()">
+
+    <!-- Google Forms plumbing -->
+    <input type="hidden" name="fvv" value="1">
+    <input type="hidden" name="pageHistory" value="0">
+    <input type="hidden" name="fbzx" value="775085190342046526">
+
+    <!-- DELIBERATE OMISSION - do not "fix" this without reading.
+         entry.859802356 is a FILE upload marked REQUIRED in Vicky's form.
+         A static page cannot carry a file on a cross-origin POST, so this page
+         never posts it. While it stays REQUIRED the submission may be rejected
+         outright. ACTION ON VICKY: set it to optional, or keep using the original
+         Google Form for anyone who needs to upload.
+         Tracked in _prototypes/forms/_gate.js SKIP and in ORCHESTRATOR.md. -->
+
+    <div class="upload-note">
+      <strong>Need to upload a file?</strong> This form cannot accept uploads &mdash; use the
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLScUjlphaXJ6ksgb_6ytG1qITaeXotwPHDWMG0FdgS-SIDGBfg/viewform" target="_blank" rel="noopener">full enrolment form</a>
+      for that, or WhatsApp it to Vicky.
+    </div>
+
+    <fieldset>
+      <legend>About you</legend>
+      <p class="hint">Required fields are marked with an asterisk.</p>
+
+      <label class="req" for="f1">Name &amp; Surname</label>
+      <input type="text" id="f1" name="entry.2065655553" required>
+
+      <label class="req" for="f2">Age &amp; Date of Birth</label>
+      <input type="text" id="f2" name="entry.1282820122" required placeholder="e.g. 34 — 12 March 1992">
+
+      <label class="req" for="f3">Occupation</label>
+      <input type="text" id="f3" name="entry.1941017993" required>
+
+      <label class="req" for="f4">Contact number</label>
+      <input type="tel" id="f4" name="entry.931003721" required placeholder="061 587 5852">
+
+      <label class="req" for="f5">Emergency contact name &amp; number</label>
+      <input type="text" id="f5" name="entry.1450630183" required>
+
+      <label class="req" for="f6">Physical address</label>
+      <input type="text" id="f6" name="entry.1170085988" required>
+
+      <label class="req" for="f7">Other physical activities or sports?</label>
+      <input type="text" id="f7" name="entry.801671311" required placeholder="e.g. netball, gym, none">
+
+      <label class="req" for="f8">Referred by</label>
+      <input type="text" id="f8" name="entry.2147032461" required placeholder="A friend's name, Instagram, Google...">
+    </fieldset>
+
+    <fieldset>
+      <legend>Health &amp; goals</legend>
+      <p class="hint">This helps Vicky keep you safe in class. It stays private.</p>
+
+      <label class="req" for="f9">Injuries, weaknesses or problem areas</label>
+      <textarea id="f9" name="entry.950946818" required placeholder="Knees, lower back, shoulders... or none"></textarea>
+
+      <label class="req" for="f10">Reason for joining &amp; what would you like to achieve?</label>
+      <textarea id="f10" name="entry.1412205903" required></textarea>
+
+      <label class="req" for="f11">Medication</label>
+      <textarea id="f11" name="entry.1837099425" required placeholder="List any medication, or write none"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>Your classes</legend>
+
+      <label class="req">Joining studio and will attend:</label>
+      <div class="opts">
+        <!-- NOTE: Vicky's form stores these two options WITH a trailing space.
+             Do not "tidy" the value - it must match or the answer will not save. -->
+        <label class="opt"><input type="radio" name="entry.1929834433" value="Private Pilates " required><span>Private Pilates</span></label>
+        <label class="opt"><input type="radio" name="entry.1929834433" value="Duet Pilates "><span>Duet Pilates</span></label>
+        <label class="opt"><input type="radio" name="entry.1929834433" value="Group Pilates class x1"><span>Group Pilates class &times;1</span></label>
+        <label class="opt"><input type="radio" name="entry.1929834433" value="Group class Pilates x2"><span>Group class Pilates &times;2</span></label>
+        <label class="opt"><input type="radio" name="entry.1929834433" value="Group class Pilates / stretch x3-4"><span>Group class Pilates / stretch &times;3&ndash;4</span></label>
+        <label class="opt"><input type="radio" name="entry.1929834433" value="Other"><span>Other</span></label>
+      </div>
+
+      <label>Have you attended a private Pilates intro session at the studio?</label>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="entry.1178510618" value="Yes"><span>Yes</span></label>
+        <label class="opt"><input type="radio" name="entry.1178510618" value="No"><span>No</span></label>
+      </div>
+
+      <label class="req">I will pay via</label>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="entry.1091353865" value="Cash" required><span>Cash</span></label>
+        <label class="opt"><input type="radio" name="entry.1091353865" value="Eft"><span>EFT</span></label>
+      </div>
+    </fieldset>
+
+    <div class="consent">
+      <p><strong>Please note.</strong> Classes attended, props and equipment used are at your own risk. The studio and instructor may not be held liable for any injury or damage caused during a session. Fees are payable monthly or per session. There is a 12-hour cancellation policy &mdash; classes not cancelled or rescheduled within that time will be charged. Please inform your instructor how you are feeling before the class, and let them know if you are unable to attend. There is a degree of physical contact between you and your instructor.</p>
+      <label class="req">Your acknowledgement</label>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="entry.842041686" value="I have read and acknowledge" required><span>I have read and acknowledge</span></label>
+        <label class="opt"><input type="radio" name="entry.842041686" value="I have read but have concerns"><span>I have read but have concerns</span></label>
+      </div>
+    </div>
+
+    <div class="consent">
+      <p><strong>Your information (POPIA).</strong> The studio stores the details on this form to manage your classes and to contact you in an emergency. We do not sell or share them. You may ask us to delete them at any time.</p>
+      <label class="opt"><input type="checkbox" id="popia" required><span>I consent to the studio storing this information.</span></label>
+      <p class="err" id="popiaErr">Please tick the consent box to continue.</p>
+    </div>
+
+    <div class="submit-row">
+      <button type="submit" class="btn btn-primary">Send my enrolment</button>
+      <a class="btn btn-secondary" href="https://wa.me/27615875852">Rather ask on WhatsApp</a>
+    </div>
+    <p class="err" id="formErr">Please complete the required fields.</p>
+  </form>
+
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none" onload="if(submitted){showThanks()}"></iframe>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p>The Dynamic Body Studio &middot; 12 Strangers Way, Dorchester Heights, East London</p>
+    <p style="margin-top:10px">&copy; <span id="yr"></span> The Dynamic Body Studio &middot; A <a href="https://www.wildlogic.co.za" target="_blank" rel="noopener">WildLogic</a> project</p>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+var submitted = false;
+
+function submitForm(){
+  if(!document.getElementById('popia').checked){
+    document.getElementById('popiaErr').style.display = 'block';
+    document.getElementById('popia').scrollIntoView({behavior:'smooth', block:'center'});
+    return false;
+  }
+  document.getElementById('popiaErr').style.display = 'none';
+
+  if(!document.getElementById('enrol').checkValidity()){
+    document.getElementById('formErr').style.display = 'block';
+    document.getElementById('enrol').reportValidity();
+    return false;
+  }
+  document.getElementById('formErr').style.display = 'none';
+  submitted = true;
+  return true;   // post to the hidden iframe, stay on the page
+}
+
+function showThanks(){
+  document.getElementById('enrol').style.display = 'none';
+  document.getElementById('thanks').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

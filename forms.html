@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<!--
+  PROTOTYPE — forms hub.
+  Links to the three branded form prototypes. The -prototype filenames are deliberate:
+  nothing here goes live until the file-upload blockers are cleared. On deploy day rename to
+    enrol.html          -> enrol.html
+    twinkle-toes.html   -> twinkle-toes.html
+    dance-academy.html  -> dance-academy.html
+    forms.html          -> forms.html
+  and update the links below.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enrol &amp; Forms — The Dynamic Body Studio</title>
+<meta name="description" content="Enrol at The Dynamic Body Studio — Twinkle Toes Ballet, the Dynamic Dance Academy, and studio classes in East London.">
+<link rel="canonical" href="https://dynamicbodystudio.co.za/forms.html">
+<meta property="og:title" content="Enrol — The Dynamic Body Studio">
+<meta property="og:description" content="Twinkle Toes Ballet, the Dynamic Dance Academy, and studio enrolment.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dynamicbodystudio.co.za/forms.html">
+<meta property="og:image" content="https://dynamicbodystudio.co.za/assets/logo.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#68ADD9; --blue-soft:#93B1D4; --pink:#E75B98;
+    --charcoal:#5D5F5E; --ink:#333; --bg:#FEFEFE; --soft:#F5F5F5;
+    --serif:"Bodoni Moda", Georgia, serif; --sans:"DM Sans", system-ui, sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--charcoal);background:var(--bg);line-height:1.6}
+  img{max-width:100%;display:block}
+  a{text-decoration:none}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 24px}
+
+  header{position:sticky;top:0;background:rgba(254,254,254,.96);backdrop-filter:blur(6px);border-bottom:1px solid #eee;z-index:10}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+  .nav img{height:44px;width:auto}
+  .nav nav{display:flex;gap:22px}
+  .nav a{color:var(--charcoal);font-weight:500;font-size:.95rem}
+  .nav a:hover{color:var(--blue)}
+  @media(max-width:640px){.nav nav{display:none}}
+
+  .hero{background:linear-gradient(180deg,var(--soft),var(--bg));text-align:center;padding:66px 24px 52px}
+  .hero img{height:96px;width:auto;margin:0 auto 20px}
+  .hero h1{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(1.8rem,4.6vw,2.7rem);line-height:1.15;margin-bottom:12px}
+  .hero p{max-width:560px;margin:0 auto;font-size:1.05rem}
+
+  section{padding:60px 0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+  .card{background:#fff;border:1px solid #eee;border-radius:16px;padding:28px 24px;display:flex;flex-direction:column;border-top:4px solid var(--blue);transition:transform .15s ease,box-shadow .15s ease}
+  .card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.07)}
+  .card:nth-child(2){border-top-color:var(--pink)}
+  .card:nth-child(3){border-top-color:var(--blue-soft)}
+  .card h2{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:1.35rem;margin-bottom:8px}
+  .card p{font-size:.93rem;flex:1;margin-bottom:18px}
+  .card .go{display:inline-block;align-self:flex-start;background:var(--blue);color:#fff;padding:12px 24px;border-radius:999px;font-weight:700;font-size:.95rem}
+  .card:nth-child(2) .go{background:var(--pink)}
+  .card:nth-child(3) .go{background:var(--blue-soft)}
+  .card .go:hover{filter:brightness(1.06)}
+
+  .note{background:var(--soft);border-radius:14px;padding:26px;text-align:center;margin-top:8px}
+  .note p{margin-bottom:16px}
+  .btn{display:inline-block;padding:13px 26px;border-radius:999px;font-weight:700;font-size:.98rem}
+  .btn-wa{background:#25D366;color:#fff}
+  .btn-sec{background:#fff;color:var(--charcoal);border:1.5px solid var(--blue-soft)}
+
+  footer{background:var(--charcoal);color:#e8e8e8;padding:34px 0;text-align:center;font-size:.88rem}
+  footer a{color:var(--blue-soft)}
+
+  @media print{
+    header,.hero img,.note,footer,.card .go{display:none !important}
+    body{background:#fff}
+    .card{border:1px solid #ccc;page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <img src="assets/logo-wide.png" alt="The Dynamic Body Studio">
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="#forms">Forms</a>
+      <a href="https://wa.me/27615875852">WhatsApp</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <img src="assets/logo.png" alt="The Dynamic Body Studio logo">
+    <h1>Join us</h1>
+    <p>Pick the class you&rsquo;re enrolling for. Each form takes about two minutes.</p>
+  </div>
+</section>
+
+<section id="forms">
+  <div class="wrap">
+    <div class="grid">
+
+      <div class="card">
+        <h2>Twinkle Toes Ballet</h2>
+        <p>For our little ballerinas. Ballet classes with a once-off R50 registration and termly or monthly fees.</p>
+        <a class="go" href="twinkle-toes.html">Enrol a ballerina</a>
+      </div>
+
+      <div class="card">
+        <h2>Dynamic Dance Academy</h2>
+        <p>Classical, Tap, Hip hop, Contemporary, Spanish and more. Groups from Minis (ages 3&ndash;6) through to Elite Masters.</p>
+        <a class="go" href="dance-academy.html">Enrol a dancer</a>
+      </div>
+
+      <div class="card">
+        <h2>Studio classes</h2>
+        <p>Reformer and mat Pilates, Barre, Pound and more for adults. Tell us about your goals and any injuries.</p>
+        <a class="go" href="enrol.html">Enrol at the studio</a>
+      </div>
+
+    </div>
+
+    <div class="note">
+      <p><strong>Not sure which one?</strong> Message Vicky &mdash; she&rsquo;ll point you to the right class.</p>
+      <a class="btn btn-wa" href="https://wa.me/27615875852?text=Hi%20Vicky%2C%20I%27d%20like%20to%20enquire%20about%20classes.">Message Vicky on WhatsApp</a>
+      <a class="btn btn-sec" href="index.html">Back to the studio site</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>The Dynamic Body Studio &middot; 12 Strangers Way, Dorchester Heights, East London</p>
+    <p><a href="https://wa.me/27615875852">WhatsApp</a> &middot; <a href="https://www.instagram.com/thedynamicbodystudio/">Instagram</a> &middot; <a href="https://www.facebook.com/TheDynamicBodyStudio/">Facebook</a></p>
+    <p style="margin-top:10px">&copy; <span id="yr"></span> The Dynamic Body Studio &middot; A <a href="https://www.wildlogic.co.za" target="_blank" rel="noopener">WildLogic</a> project</p>
+  </div>
+</footer>
+
+<script>document.getElementById('yr').textContent=new Date().getFullYear()</script>
+
+</body>
+</html>

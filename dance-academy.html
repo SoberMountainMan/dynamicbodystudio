@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<!--
+  PROTOTYPE — Dynamic Dance Academy intake.
+  Backend: Vicky's existing Google Form
+    published id 1FAIpQLSebxWQdjCNynd54xYgWCmeKOJ2i01pqzXktQAQwulba8MgK1w
+    edit id     11uNYzHIQn483yC-5vU2EulHTHtvKTZYebHUWVkXQnCY
+  NOTE: this is the 2025 edition (registration day 22 Nov 2025). Confirm with Vicky
+  whether it is the current one before publishing — she also has a 2026 form titled the same.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Dance Academy — Enrol</title>
+<meta name="description" content="Enrol at the Dynamic Dance Academy, East London. Classical, Tap, Hip hop, Contemporary and more for ages 3 to 18.">
+<link rel="canonical" href="https://dynamicbodystudio.co.za/dance-academy.html">
+<meta property="og:title" content="Dynamic Dance Academy — Enrol">
+<meta property="og:description" content="Enrol at the Dynamic Dance Academy, East London.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dynamicbodystudio.co.za/dance-academy.html">
+<meta property="og:image" content="https://dynamicbodystudio.co.za/assets/logo.png">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#68ADD9; --blue-soft:#93B1D4; --pink:#E75B98;
+    --charcoal:#5D5F5E; --ink:#333; --bg:#FEFEFE; --soft:#F5F5F5;
+    --serif:"Bodoni Moda", Georgia, serif; --sans:"DM Sans", system-ui, sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--charcoal);background:var(--bg);line-height:1.6}
+  img{max-width:100%;display:block}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px}
+
+  header{border-bottom:1px solid #eee;background:rgba(254,254,254,.96)}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+  .nav img{height:40px;width:auto}
+  .nav a{color:var(--charcoal);text-decoration:none;font-weight:500;font-size:.95rem}
+  .nav a:hover{color:var(--blue)}
+
+  .hero{text-align:center;padding:44px 20px 24px}
+  .hero h1{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(1.7rem,4.5vw,2.4rem);line-height:1.15;margin-bottom:10px}
+  .hero p{max-width:540px;margin:0 auto;font-size:1rem}
+
+  form{padding-bottom:60px}
+  fieldset{border:none;margin-bottom:26px}
+  legend{font-family:var(--serif);font-size:1.25rem;color:var(--ink);margin-bottom:4px;padding:0}
+  .hint{font-size:.85rem;color:#8a8c8b;margin-bottom:14px}
+
+  label{display:block;font-weight:500;font-size:.92rem;color:var(--ink);margin:16px 0 6px}
+  .req::after{content:" *";color:var(--pink)}
+  input[type=text],input[type=tel],textarea{
+    width:100%;padding:13px 14px;border:1.5px solid #e2e2e2;border-radius:10px;
+    font-family:var(--sans);font-size:1rem;color:var(--ink);background:#fff;
+  }
+  input:focus,textarea:focus{outline:none;border-color:var(--blue)}
+  textarea{min-height:80px;resize:vertical}
+
+  .opts{margin-top:6px}
+  .opt{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border:1.5px solid #e2e2e2;border-radius:10px;margin-bottom:8px;cursor:pointer;background:#fff}
+  .opt:hover{border-color:var(--blue-soft)}
+  .opt input{margin-top:4px;accent-color:var(--blue)}
+  .opt span{font-size:.95rem}
+  .opt small{display:block;color:#8a8c8b;font-size:.82rem}
+
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+  .grid2 .opt{margin-bottom:0}
+
+  .box{background:var(--soft);border-radius:12px;padding:18px;margin:8px 0 22px}
+  .box p{font-size:.87rem;margin-bottom:12px}
+  .box .opt{background:#fff}
+
+  .err{color:#c0392b;font-size:.85rem;margin-top:6px;display:none}
+
+  .submit-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .btn{display:inline-block;padding:14px 30px;border-radius:999px;text-decoration:none;font-weight:700;font-size:1rem;border:none;cursor:pointer;font-family:var(--sans)}
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-primary:hover{background:#5a9dc9}
+  .btn-secondary{background:#fff;color:var(--charcoal);border:1.5px solid var(--blue-soft)}
+  .btn-print{background:transparent;border:1.5px solid #ddd;color:var(--charcoal);padding:12px 22px;border-radius:999px;cursor:pointer;font-family:var(--sans);font-weight:500}
+
+  #thanks{display:none;background:var(--soft);border-radius:14px;padding:32px;text-align:center;margin:20px 0 60px}
+  #thanks h2{font-family:var(--serif);font-weight:500;color:var(--ink);margin-bottom:10px}
+  #thanks p{margin-bottom:18px}
+
+  footer{background:var(--charcoal);color:#e8e8e8;padding:30px 0;text-align:center;font-size:.88rem}
+  footer a{color:var(--blue-soft);text-decoration:none}
+
+  @media print{
+    header .nav a, .submit-row, footer, #thanks, .btn-print{display:none !important}
+    body{background:#fff;color:#000}
+    .hero{padding:0 0 16px}
+    .hero h1{font-size:22pt}
+    .opt{border:1px solid #999;background:#fff}
+    .box{background:#fff;border:1px solid #ccc}
+    input[type=text],input[type=tel],textarea{border:1px solid #999;background:#fff}
+    fieldset,.box{page-break-inside:avoid}
+    .print-head{display:block !important}
+  }
+  .print-head{display:none;font-size:.8rem;color:#8a8c8b;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <img src="assets/logo-wide.png" alt="The Dynamic Body Studio">
+    <a href="index.html">&larr; Back to site</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <h1>Dynamic Dance Academy</h1>
+    <p>Enrol for the year. Classical, Tap, Hip hop, Contemporary and more, ages 3 to 18.</p>
+    <p class="print-head">The Dynamic Body Studio &middot; 12 Strangers Way, Dorchester Heights, East London &middot; 061 587 5852</p>
+  </div>
+</section>
+
+<div class="wrap">
+
+  <div id="thanks">
+    <h2>Thank you &mdash; your enrolment is in.</h2>
+    <p>Vicky will confirm your place and the registration day on WhatsApp.</p>
+    <div class="submit-row" style="justify-content:center">
+      <a class="btn btn-primary" href="https://wa.me/27615875852?text=Hi%20Vicky%2C%20I%20just%20sent%20my%20Dance%20Academy%20enrolment.">Message Vicky on WhatsApp</a>
+      <a class="btn btn-secondary" href="index.html">Back to site</a>
+    </div>
+  </div>
+
+  <form id="dda" method="post" target="hidden_iframe"
+        action="https://docs.google.com/forms/d/e/1FAIpQLSebxWQdjCNynd54xYgWCmeKOJ2i01pqzXktQAQwulba8MgK1w/formResponse"
+        onsubmit="return submitForm()">
+
+    <input type="hidden" name="fvv" value="1">
+    <input type="hidden" name="pageHistory" value="0">
+    <input type="hidden" name="fbzx" value="-6551682399620843297">
+
+    <fieldset>
+      <legend>The dancer</legend>
+      <p class="hint">Fields marked * are required.</p>
+
+      <label class="req" for="d1">Name &amp; surname</label>
+      <input type="text" id="d1" name="entry.383369535" required>
+
+      <label class="req" for="d2">Age</label>
+      <input type="text" id="d2" name="entry.1699711477" required>
+
+      <label class="req" for="d3">Contact cell number</label>
+      <input type="tel" id="d3" name="entry.248620316" required placeholder="061 587 5852">
+
+      <label class="req" for="d4">School &amp; grade</label>
+      <input type="text" id="d4" name="entry.2142873842" required placeholder="e.g. Hudson Park — Grade 4">
+
+      <label class="req" for="d5">Dance studio / dance experience</label>
+      <input type="text" id="d5" name="entry.860834112" required placeholder="Previous studio, years dancing, or none">
+    </fieldset>
+
+    <fieldset>
+      <legend>Academy group</legend>
+      <label class="req">Which group?</label>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="entry.435469172" value="Minis: Ages 3-6yrs" required><span>Minis &mdash; ages 3 to 6</span></label>
+        <label class="opt"><input type="radio" name="entry.435469172" value="Juniors: Grade 1-7"><span>Juniors &mdash; Grade 1 to 7</span></label>
+        <label class="opt"><input type="radio" name="entry.435469172" value="Seniors: Grade 8-12"><span>Seniors &mdash; Grade 8 to 12</span></label>
+        <label class="opt"><input type="radio" name="entry.435469172" value="Elite Masters"><span>Elite Masters</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Dance styles</legend>
+      <label class="req">Select your styles of choice (tick all that apply)</label>
+      <div class="opts grid2">
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Classical"><span>Classical</span></label>
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Tap"><span>Tap</span></label>
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Hip hop"><span>Hip hop</span></label>
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Gumboot"><span>Gumboot</span></label>
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Township"><span>Township</span></label>
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Belly Dancing"><span>Belly Dancing</span></label>
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Contemporary"><span>Contemporary</span></label>
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Modern"><span>Modern</span></label>
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Spanish"><span>Spanish</span></label>
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Cabaret"><span>Cabaret</span></label>
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Funky fun movement"><span>Funky fun movement</span></label>
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Drama/Acting"><span>Drama / Acting</span></label>
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Mini Group"><span>Mini Group</span></label>
+      </div>
+      <p class="err" id="styleErr">Please choose at least one style.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Fees</legend>
+      <label class="req">Academy fees</label>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="entry.1472974057" value="Minis: R650" required><span>Minis: R650</span></label>
+        <label class="opt"><input type="radio" name="entry.1472974057" value="2 styles R650"><span>2 styles &mdash; R650</span></label>
+        <label class="opt"><input type="radio" name="entry.1472974057" value="4 styles R960"><span>4 styles &mdash; R960</span></label>
+        <label class="opt"><input type="radio" name="entry.1472974057" value="6 styles R1200"><span>6 styles &mdash; R1200</span></label>
+        <label class="opt"><input type="radio" name="entry.1472974057" value="8 styles R1300"><span>8 styles &mdash; R1300</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Academy top</legend>
+      <p class="hint">Included in the fee.</p>
+      <label class="req">Top</label>
+      <div class="opts grid2">
+        <label class="opt"><input type="radio" name="entry.1692102822" value="T-shirt" required><span>T-shirt</span></label>
+        <label class="opt"><input type="radio" name="entry.1692102822" value="Vest"><span>Vest</span></label>
+      </div>
+      <label class="req">Size</label>
+      <div class="opts grid2">
+        <label class="opt"><input type="radio" name="entry.1866052615" value="Kiddies size" required><span>Kiddies size</span></label>
+        <label class="opt"><input type="radio" name="entry.1866052615" value="Small"><span>Small</span></label>
+        <label class="opt"><input type="radio" name="entry.1866052615" value="Medium"><span>Medium</span></label>
+        <label class="opt"><input type="radio" name="entry.1866052615" value="Large"><span>Large</span></label>
+        <label class="opt"><input type="radio" name="entry.1866052615" value="XL"><span>XL</span></label>
+      </div>
+    </fieldset>
+
+    <div class="box">
+      <p><strong>Media consent.</strong> I give permission for photos and videos from the academy to be posted on the academy social media.</p>
+      <div class="opts grid2">
+        <label class="opt"><input type="radio" name="entry.268096178" value="Yes" required><span>Yes</span></label>
+        <label class="opt"><input type="radio" name="entry.268096178" value="No"><span>No</span></label>
+      </div>
+    </div>
+
+    <div class="box">
+      <p><strong>Indemnity.</strong> The applicant and their guardian acknowledge that the applicant enters the dance academy at their own risk, and hereby indemnify and hold harmless the organisers against any loss or damage arising out of participation in the academy and any activities directly or indirectly related to it, whether caused by negligence or not.</p>
+      <label class="req">Type or confirm YES I ACCEPT</label>
+      <input type="text" id="d6" name="entry.903878165" required placeholder="YES I ACCEPT" pattern="\s*(?i:yes\s+i\s+accept)\s*" title="Please type YES I ACCEPT">
+      <p class="err" id="indemErr">Please type YES I ACCEPT.</p>
+    </div>
+
+    <div class="box">
+      <p><strong>Registration day.</strong> I understand I am to attend the registration day. The registration fee is payable in cash on the day.</p>
+      <label class="opt"><input type="checkbox" name="entry.663836416" value="Yes" id="reg" required><span>Yes, I understand</span></label>
+      <p class="err" id="regErr">Please confirm the registration day.</p>
+    </div>
+
+    <div class="box">
+      <p><strong>Your information (POPIA).</strong> The academy keeps these details to run the classes and to contact you in an emergency. We do not sell or share them. You may ask us to delete them at any time.</p>
+      <label class="opt"><input type="checkbox" id="popia" required><span>I am the dancer&rsquo;s parent or guardian and I consent to the academy storing this information.</span></label>
+      <p class="err" id="popiaErr">Please tick the consent box to continue.</p>
+    </div>
+
+    <div class="submit-row">
+      <button type="submit" class="btn btn-primary">Send enrolment</button>
+      <button type="button" class="btn-print" onclick="window.print()">Print this form</button>
+      <a class="btn btn-secondary" href="https://wa.me/27615875852">Rather ask on WhatsApp</a>
+    </div>
+    <p class="err" id="formErr">Please complete the required fields.</p>
+  </form>
+
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none" onload="if(submitted){showThanks()}"></iframe>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p>The Dynamic Body Studio &middot; 12 Strangers Way, Dorchester Heights, East London</p>
+    <p style="margin-top:10px">&copy; <span id="yr"></span> The Dynamic Body Studio &middot; A <a href="https://www.wildlogic.co.za" target="_blank" rel="noopener">WildLogic</a> project</p>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+var submitted = false;
+
+function submitForm(){
+  var ok = true;
+
+  // POPIA consent
+  if(!document.getElementById('popia').checked){
+    document.getElementById('popiaErr').style.display='block'; ok=false;
+  } else document.getElementById('popiaErr').style.display='none';
+
+  // at least one dance style
+  var styles = document.querySelectorAll('input[name="entry.1342010349"]:checked');
+  if(styles.length===0){
+    document.getElementById('styleErr').style.display='block'; ok=false;
+  } else document.getElementById('styleErr').style.display='none';
+
+  // indemnity wording
+  var indem = document.getElementById('d6');
+  if(!/^\s*yes\s+i\s+accept\s*$/i.test(indem.value)){
+    document.getElementById('indemErr').style.display='block'; ok=false;
+  } else document.getElementById('indemErr').style.display='none';
+
+  // registration day
+  if(!document.getElementById('reg').checked){
+    document.getElementById('regErr').style.display='block'; ok=false;
+  } else document.getElementById('regErr').style.display='none';
+
+  if(!document.getElementById('dda').checkValidity()){
+    document.getElementById('formErr').style.display='block';
+    document.getElementById('dda').reportValidity();
+    return false;
+  }
+  if(!ok){
+    document.getElementById('formErr').style.display='none';
+    return false;
+  }
+  document.getElementById('formErr').style.display='none';
+  submitted = true;
+  return true;
+}
+
+function showThanks(){
+  document.getElementById('dda').style.display='none';
+  document.getElementById('thanks').style.display='block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

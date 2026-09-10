@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Twinkle Toes Ballet — Enrol</title>
+<meta name="description" content="Enrol your little ballerina at Twinkle Toes Ballet, The Dynamic Body Studio, East London.">
+<link rel="canonical" href="https://dynamicbodystudio.co.za/twinkle-toes.html">
+<meta property="og:title" content="Twinkle Toes Ballet — Enrol">
+<meta property="og:description" content="Enrol your little ballerina at Twinkle Toes Ballet in East London.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dynamicbodystudio.co.za/twinkle-toes.html">
+<meta property="og:image" content="https://dynamicbodystudio.co.za/assets/logo.png">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#68ADD9; --blue-soft:#93B1D4; --pink:#E75B98;
+    --charcoal:#5D5F5E; --ink:#333; --bg:#FEFEFE; --soft:#F5F5F5;
+    --serif:"Bodoni Moda", Georgia, serif; --sans:"DM Sans", system-ui, sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--charcoal);background:var(--bg);line-height:1.6}
+  img{max-width:100%;display:block}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+
+  header{border-bottom:1px solid #eee;background:rgba(254,254,254,.96)}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+  .nav img{height:40px;width:auto}
+  .nav a{color:var(--charcoal);text-decoration:none;font-weight:500;font-size:.95rem}
+  .nav a:hover{color:var(--blue)}
+
+  .hero{text-align:center;padding:44px 20px 24px}
+  .hero h1{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(1.7rem,4.5vw,2.4rem);line-height:1.15;margin-bottom:10px}
+  .hero p{max-width:520px;margin:0 auto;font-size:1rem}
+
+  form{padding-bottom:60px}
+  fieldset{border:none;margin-bottom:26px}
+  legend{font-family:var(--serif);font-size:1.25rem;color:var(--ink);margin-bottom:4px;padding:0}
+  .hint{font-size:.85rem;color:#8a8c8b;margin-bottom:14px}
+
+  label{display:block;font-weight:500;font-size:.92rem;color:var(--ink);margin:16px 0 6px}
+  .req::after{content:" *";color:var(--pink)}
+  input[type=text],input[type=tel],textarea{
+    width:100%;padding:13px 14px;border:1.5px solid #e2e2e2;border-radius:10px;
+    font-family:var(--sans);font-size:1rem;color:var(--ink);background:#fff;
+  }
+  input:focus,textarea:focus{outline:none;border-color:var(--blue)}
+  textarea{min-height:92px;resize:vertical}
+
+  .opts{margin-top:6px}
+  .opt{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border:1.5px solid #e2e2e2;border-radius:10px;margin-bottom:8px;cursor:pointer;background:#fff}
+  .opt:hover{border-color:var(--blue-soft)}
+  .opt input{margin-top:4px;accent-color:var(--blue)}
+  .opt span{font-size:.95rem}
+
+  .box{background:var(--soft);border-radius:12px;padding:18px;margin:8px 0 22px}
+  .box p{font-size:.87rem;margin-bottom:12px}
+  .box .opt{background:#fff}
+
+  .err{color:#c0392b;font-size:.85rem;margin-top:6px;display:none}
+
+  .submit-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .btn{display:inline-block;padding:14px 30px;border-radius:999px;text-decoration:none;font-weight:700;font-size:1rem;border:none;cursor:pointer;font-family:var(--sans)}
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-primary:hover{background:#5a9dc9}
+  .btn-secondary{background:#fff;color:var(--charcoal);border:1.5px solid var(--blue-soft)}
+  .btn-print{background:transparent;border:1.5px solid #ddd;color:var(--charcoal);padding:12px 22px;border-radius:999px;cursor:pointer;font-family:var(--sans);font-weight:500}
+
+  #thanks{display:none;background:var(--soft);border-radius:14px;padding:32px;text-align:center;margin:20px 0 60px}
+  #thanks h2{font-family:var(--serif);font-weight:500;color:var(--ink);margin-bottom:10px}
+  #thanks p{margin-bottom:18px}
+
+  .upload-note{background:#fff8fb;border:1.5px solid var(--pink);border-radius:12px;padding:14px 16px;font-size:.88rem;margin-bottom:20px}
+
+  footer{background:var(--charcoal);color:#e8e8e8;padding:30px 0;text-align:center;font-size:.88rem}
+  footer a{color:var(--blue-soft);text-decoration:none}
+
+  /* ---- Print: Vicky asked to print these ---- */
+  @media print{
+    header .nav a, .submit-row, .upload-note, footer, #thanks, .btn-print{display:none !important}
+    body{background:#fff;color:#000}
+    .hero{padding:0 0 16px}
+    .hero h1{font-size:22pt}
+    .opt{border:1px solid #999;background:#fff}
+    .box{background:#fff;border:1px solid #ccc}
+    input[type=text],input[type=tel],textarea{border:1px solid #999;background:#fff}
+    fieldset{page-break-inside:avoid}
+    .print-head{display:block !important}
+  }
+  .print-head{display:none;font-size:.8rem;color:#8a8c8b;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <img src="assets/logo-wide.png" alt="The Dynamic Body Studio">
+    <a href="index.html">&larr; Back to site</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <h1>Twinkle Toes Ballet</h1>
+    <p>Enrol your little ballerina. Vicky will confirm the class on WhatsApp.</p>
+    <p class="print-head">The Dynamic Body Studio &middot; 12 Strangers Way, Dorchester Heights, East London &middot; 061 587 5852</p>
+  </div>
+</section>
+
+<div class="wrap">
+
+  <div id="thanks">
+    <h2>Thank you &mdash; your enrolment is in.</h2>
+    <p>Vicky will confirm your ballerina&rsquo;s place on WhatsApp.</p>
+    <div class="submit-row" style="justify-content:center">
+      <a class="btn btn-primary" href="https://wa.me/27615875852?text=Hi%20Vicky%2C%20I%20just%20sent%20my%20Twinkle%20Toes%20enrolment.">Message Vicky on WhatsApp</a>
+      <a class="btn btn-secondary" href="index.html">Back to site</a>
+    </div>
+  </div>
+
+  <form id="tt" method="post" target="hidden_iframe"
+        action="https://docs.google.com/forms/d/e/1FAIpQLSdEv2X_6RxEyls1uzopEZ9L0VUf2szAHLSz847LRCnrJPpUCA/formResponse"
+        onsubmit="return submitForm()">
+
+    <input type="hidden" name="fvv" value="1">
+    <input type="hidden" name="pageHistory" value="0">
+    <input type="hidden" name="fbzx" value="1769488907475069364">
+
+    <!-- DELIBERATE OMISSIONS - do not "fix" these without reading.
+         1. entry.2009902291 - FILE upload, marked REQUIRED in Vicky's form.
+            A static page cannot carry a file on a cross-origin POST, so this page
+            never posts it. If the field stays REQUIRED the submission may be
+            rejected outright. ACTION ON VICKY: set it to optional, or keep using
+            the original Google Form for anyone who needs to upload.
+         2. entry.1964413680 - an untitled radio whose only option is literally
+            "Option 1". That is a Google Forms default artifact, not a real
+            question. It is optional, so omitting it records blank.
+            ACTION ON VICKY: delete this field from the form.
+         Both are tracked in _prototypes/forms/_gate.js SKIP and in ORCHESTRATOR.md. -->
+
+    <div class="upload-note">
+      <strong>Photo upload:</strong> this form cannot take uploads. Please WhatsApp a photo to
+      Vicky on 061 587 5852, or use the
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSdEv2X_6RxEyls1uzopEZ9L0VUf2szAHLSz847LRCnrJPpUCA/viewform" target="_blank" rel="noopener">original form</a>.
+    </div>
+
+    <fieldset>
+      <legend>Your ballerina</legend>
+      <p class="hint">Fields marked * are required.</p>
+
+      <label class="req" for="b1">Ballerina&rsquo;s name &amp; surname</label>
+      <input type="text" id="b1" name="entry.1245073953" required>
+
+      <label class="req" for="b2">Ballerina&rsquo;s age &amp; date of birth</label>
+      <input type="text" id="b2" name="entry.622387165" required placeholder="e.g. 5 — 3 April 2021">
+
+      <label class="req" for="b3">Ballerina&rsquo;s school</label>
+      <input type="text" id="b3" name="entry.1132452971" required>
+    </fieldset>
+
+    <fieldset>
+      <legend>Parents &amp; contact</legend>
+
+      <label class="req" for="b4">Mom&rsquo;s name &amp; number</label>
+      <input type="text" id="b4" name="entry.1504473121" required>
+
+      <label class="req" for="b5">Dad&rsquo;s name &amp; number</label>
+      <input type="text" id="b5" name="entry.457056881" required>
+    </fieldset>
+
+    <fieldset>
+      <legend>Fees</legend>
+
+      <label class="req">Once-off registration fee of R50, payable on joining</label>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="entry.355702491" value="I agree to pay" required><span>I agree to pay</span></label>
+      </div>
+
+      <label class="req">Ballet fees to be paid</label>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="entry.1286357369" value="R650 per term ( 4 payments)" required><span>R650 per term (4 payments)</span></label>
+        <label class="opt"><input type="radio" name="entry.1286357369" value="R240 per month (12 months)"><span>R240 per month (12 months)</span></label>
+      </div>
+    </fieldset>
+
+    <div class="box">
+      <p><strong>Ballet attire for class:</strong> leotard and skirt. Ballet shoes optional. For stage performances a pink leotard, skirt, ballet stockings or socks and shoes are required. Stage performances are available but not compulsory.</p>
+      <label class="req">Your acknowledgement</label>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="entry.1721171010" value="I have noted&understand" required><span>I have noted &amp; understand</span></label>
+      </div>
+    </div>
+
+    <div class="box">
+      <p><strong>Media consent &mdash; parents WhatsApp group.</strong> Photos and videos taken during classes shared on the parents WhatsApp group?</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="entry.718663582" value="Yes" required><span>Yes</span></label>
+        <label class="opt"><input type="radio" name="entry.718663582" value="Not if my child is in it"><span>Not if my child is in it</span></label>
+      </div>
+    </div>
+
+    <div class="box">
+      <p><strong>Media consent &mdash; studio Facebook page.</strong> Photos and videos taken during classes shared on the studio Facebook page?</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="entry.1324265741" value="Yes" required><span>Yes</span></label>
+        <label class="opt"><input type="radio" name="entry.1324265741" value="Not if my child is in it"><span>Not if my child is in it</span></label>
+      </div>
+    </div>
+
+    <fieldset>
+      <legend>About your ballerina</legend>
+      <label class="req" for="b6">A little background about your little ballerina, and anything specific I need to know</label>
+      <textarea id="b6" name="entry.774601978" required placeholder="Allergies, shyness, previous dance experience, anything at all"></textarea>
+    </fieldset>
+
+    <div class="box">
+      <p><strong>Your information (POPIA).</strong> The studio keeps these details to run the classes and to contact you in an emergency. We do not sell or share them. You may ask us to delete them at any time.</p>
+      <label class="opt"><input type="checkbox" id="popia" required><span>I am the ballerina&rsquo;s parent or guardian and I consent to the studio storing this information.</span></label>
+      <p class="err" id="popiaErr">Please tick the consent box to continue.</p>
+    </div>
+
+    <div class="submit-row">
+      <button type="submit" class="btn btn-primary">Send enrolment</button>
+      <button type="button" class="btn-print" onclick="window.print()">Print this form</button>
+      <a class="btn btn-secondary" href="https://wa.me/27615875852">Rather ask on WhatsApp</a>
+    </div>
+    <p class="err" id="formErr">Please complete the required fields.</p>
+  </form>
+
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none" onload="if(submitted){showThanks()}"></iframe>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p>The Dynamic Body Studio &middot; 12 Strangers Way, Dorchester Heights, East London</p>
+    <p style="margin-top:10px">&copy; <span id="yr"></span> The Dynamic Body Studio &middot; A <a href="https://www.wildlogic.co.za" target="_blank" rel="noopener">WildLogic</a> project</p>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+var submitted = false;
+
+function submitForm(){
+  if(!document.getElementById('popia').checked){
+    document.getElementById('popiaErr').style.display = 'block';
+    document.getElementById('popia').scrollIntoView({behavior:'smooth', block:'center'});
+    return false;
+  }
+  document.getElementById('popiaErr').style.display = 'none';
+
+  if(!document.getElementById('tt').checkValidity()){
+    document.getElementById('formErr').style.display = 'block';
+    document.getElementById('tt').reportValidity();
+    return false;
+  }
+  document.getElementById('formErr').style.display = 'none';
+  submitted = true;
+  return true;
+}
+
+function showThanks(){
+  document.getElementById('tt').style.display = 'none';
+  document.getElementById('thanks').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>
