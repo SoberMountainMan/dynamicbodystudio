@@ -1,0 +1,383 @@
+/**
+ * gen_og_cards.js - branded 1200x630 share cards for dynamicbodystudio.co.za
+ *
+ * WHY GENERATED, NOT STOCK OR AI:
+ *   These cards carry exact dates, exact fees and the brand mark. An AI-generated image
+ *   garbles text; a stock photo carries a licence and says nothing about the studio.
+ *   Rendering the real HTML gives pixel-exact type and reuses the site's own palette.
+ *
+ * Run:
+ *   NODE_PATH="C:/Users/User/.workbuddy-ai/binaries/node/workspace/node_modules" \
+ *     node _tools/gen_og_cards.js
+ *
+ * Output: assets/og/*.png  (1200x630, the OG/Twitter ratio)
+ *
+ * READ-ONLY with respect to the site: it writes PNGs into assets/og/ and touches nothing else.
+ * Wiring the meta tags is a separate step (see the WIRING block at the bottom).
+ */
+
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+
+const ROOT = path.resolve(__dirname, '..');
+const OUT_DIR = path.join(ROOT, 'assets', 'og');
+
+// ---------------------------------------------------------------------------
+// The cards. One per shareable page.
+// accent: 'blue' for studio/pilates, 'pink' for dance. Palette is read from the
+// site's own :root, not invented - see index.html lines 22-26.
+// ---------------------------------------------------------------------------
+const CARDS = [
+  {
+    out: 'home.png',
+    kicker: 'Dorchester Heights \u00b7 East London',
+    title: 'The Dynamic Body Studio',
+    sub: 'Reformer Pilates, Barre, Pound and more',
+    cta: 'Enrol online',
+    accent: 'blue',
+  },
+  {
+    out: 'enrol.png',
+    kicker: 'Enrol online',
+    title: 'Join the studio',
+    sub: 'Dance Academy \u00b7 Twinkle Toes Ballet \u00b7 Studio classes',
+    cta: 'Start here',
+    accent: 'pink',
+  },
+  {
+    out: 'studio.png',
+    kicker: 'Studio enrolment',
+    title: 'Pilates classes',
+    sub: 'Tell us your goals and we will place you in the right class',
+    cta: 'Enrol at the studio',
+    accent: 'blue',
+  },
+  {
+    out: 'dance-academy.png',
+    kicker: '2026 intake now open',
+    title: 'Dynamic Dance Academy',
+    sub: '30 November \u2013 19 December 2026 \u00b7 Registration day 21 November',
+    cta: 'Enrol a dancer',
+    accent: 'pink',
+  },
+  {
+    out: 'twinkle-toes.png',
+    kicker: 'Next intake 2027',
+    title: 'Twinkle Toes Ballet',
+    sub: 'Ballet for our youngest dancers \u00b7 East London',
+    cta: 'Ask about 2027',
+    accent: 'pink',
+  },
+];
+
+// ---------------------------------------------------------------------------
+// CONTROLS - prove the layout gate can fail before trusting it.
+// An unproven check is decoration.
+//   OG_CARD_CONTROL_LONG=6   repeat the headline until it MUST overflow the frame
+//   OG_CARD_CONTROL_LOGO=1   reinstate the squashed-logo CSS that caused the bug
+// Both are expected to produce FAIL. If either passes, the gate is not working.
+// ---------------------------------------------------------------------------
+if (process.env.OG_CARD_CONTROL_LONG) {
+  const n = Math.max(1, Number(process.env.OG_CARD_CONTROL_LONG) || 6);
+  const filler = Array.from({ length: n }, () => 'Longword').join(' ');
+  CARDS.forEach((c) => { c.title = c.title + ' ' + filler; });
+}
+const LOGO_CSS = process.env.OG_CARD_CONTROL_LOGO
+  ? '.logo{height:76px;width:auto;margin-bottom:auto}'   // the bug, verbatim
+  : '.logo{width:404px;height:auto;align-self:flex-start;margin-bottom:auto}';
+
+const PALETTE = {
+  blue: '#68ADD9',
+  blueSoft: '#93B1D4',
+  pink: '#E75B98',
+  charcoal: '#5D5F5E',
+  ink: '#333333',
+  bg: '#FEFEFE',
+};
+
+const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const WIDE_LOGO = path.join(ROOT, 'Dynamic Studios-Transparent.png');
+
+// ---------------------------------------------------------------------------
+// Assets as data: URIs. A file:// reference races document.fonts.ready; a data
+// URI removes the race entirely and makes the render offline-deterministic.
+// ---------------------------------------------------------------------------
+// A SHORT UA gets the LEGACY Google Fonts CSS: one @font-face per family, no
+// `/* latin */` subset comments, no unicode-range - so subset parsing silently
+// finds nothing. Send a full modern Chrome UA to get the subsetted stylesheet.
+const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                 + '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+function fetchBuf(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, { headers: { 'User-Agent': BROWSER_UA } }, (r) => {
+      if (r.statusCode !== 200) return reject(new Error(`HTTP ${r.statusCode} for ${url}`));
+      const chunks = [];
+      r.on('data', (c) => chunks.push(c));
+      r.on('end', () => resolve(Buffer.concat(chunks)));
+    }).on('error', reject);
+  });
+}
+
+/**
+ * Pull only the `latin` @font-face blocks and dedupe by file URL.
+ * Google serves the SAME variable file for several declared weights, so dedupe
+ * by src and widen the weight range instead of embedding the same bytes twice.
+ */
+async function loadFonts() {
+  const cssUrl = 'https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600'
+               + '&family=DM+Sans:wght@400;500;700&display=swap';
+  const css = (await fetchBuf(cssUrl)).toString('utf8');
+
+  const blocks = [];
+  const re = /\/\*\s*([a-z0-9-]+)\s*\*\/\s*@font-face\s*\{([^}]*)\}/g;
+  let m;
+  while ((m = re.exec(css))) {
+    const subset = m[1];
+    if (subset !== 'latin') continue;               // latin-ext/cyrillic are dead weight here
+    const body = m[2];
+    const fam = (body.match(/font-family:\s*'([^']+)'/) || [])[1];
+    const wght = (body.match(/font-weight:\s*(\d+)/) || [])[1];
+    const url = (body.match(/url\((https:[^)]+\.woff2)\)/) || [])[1];
+    if (fam && wght && url) blocks.push({ fam, wght: Number(wght), url });
+  }
+  if (!blocks.length) throw new Error('no latin @font-face blocks parsed');
+
+  // dedupe by family+url, keeping the weight range that file covers
+  const byKey = new Map();
+  for (const b of blocks) {
+    const key = b.fam + '|' + b.url;
+    const cur = byKey.get(key);
+    if (cur) {
+      cur.min = Math.min(cur.min, b.wght);
+      cur.max = Math.max(cur.max, b.wght);
+    } else {
+      byKey.set(key, { fam: b.fam, url: b.url, min: b.wght, max: b.wght });
+    }
+  }
+
+  const faces = [];
+  for (const f of byKey.values()) {
+    const buf = await fetchBuf(f.url);
+    faces.push({
+      fam: f.fam,
+      range: f.min === f.max ? String(f.min) : `${f.min} ${f.max}`,
+      b64: buf.toString('base64'),
+      bytes: buf.length,
+    });
+  }
+  return faces;
+}
+
+function dataUri(file) {
+  return 'data:image/png;base64,' + fs.readFileSync(file).toString('base64');
+}
+
+// ---------------------------------------------------------------------------
+// The card markup. Kept as plain concatenation rather than one big template
+// literal: a stray backtick inside a comment silently terminates the string.
+// ---------------------------------------------------------------------------
+function cardHtml(card, faces, logoSrc) {
+  const accent = PALETTE[card.accent === 'pink' ? 'pink' : 'blue'];
+  const accentSoft = PALETTE[card.accent === 'pink' ? 'pink' : 'blueSoft'];
+
+  const fontCss = faces.map((f) =>
+    "@font-face{font-family:'" + f.fam + "';font-style:normal;font-weight:" + f.range
+    + ";src:url(data:font/woff2;base64," + f.b64 + ") format('woff2');font-display:block}"
+  ).join('\n');
+
+  return [
+    '<!doctype html><html><head><meta charset="utf-8">',
+    '<style>',
+    fontCss,
+    '*{margin:0;padding:0;box-sizing:border-box}',
+    'html,body{width:1200px;height:630px;overflow:hidden}',
+    'body{font-family:\'DM Sans\',system-ui,sans-serif;color:' + PALETTE.charcoal + ';background:' + PALETTE.bg + ';position:relative}',
+    // soft brand wash: two off-canvas radial blobs, low opacity, so the card is not flat white
+    '.blob{position:absolute;border-radius:50%;filter:blur(0px)}',
+    '.blob.p{width:620px;height:620px;right:-190px;top:-260px;background:radial-gradient(circle at 50% 50%,'
+      + hexA(accent, .20) + ' 0%,' + hexA(accent, .05) + ' 55%,rgba(255,255,255,0) 72%)}',
+    '.blob.b{width:520px;height:520px;left:-170px;bottom:-240px;background:radial-gradient(circle at 50% 50%,'
+      + hexA(accentSoft, .22) + ' 0%,' + hexA(accentSoft, .05) + ' 55%,rgba(255,255,255,0) 72%)}',
+    // a single accent bar down the left edge: the only hard-edged brand mark
+    '.edge{position:absolute;left:0;top:0;bottom:0;width:14px;background:linear-gradient(180deg,'
+      + accent + ' 0%,' + accentSoft + ' 100%)}',
+    '.card{position:relative;z-index:2;height:100%;padding:64px 72px 56px 86px;display:flex;flex-direction:column}',
+    // align-self:flex-start is load-bearing. A flex column container defaults to
+    // align-items:stretch, which overrides width:auto and forces the image to the
+    // full content width - a 1617x415 lockup rendered as 1042x76, squashed to
+    // 13.7:1 against its natural 3.9:1. Size it by WIDTH and let height follow.
+    LOGO_CSS,
+    '.kicker{font-size:22px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:'
+      + accent + ';margin-bottom:18px}',
+    'h1{font-family:\'Bodoni Moda\',Georgia,serif;font-weight:600;font-size:82px;line-height:1.06;'
+      + 'letter-spacing:-.01em;color:' + PALETTE.ink + ';max-width:900px}',
+    '.sub{font-size:27px;font-weight:400;line-height:1.45;color:' + PALETTE.charcoal + ';margin-top:22px;max-width:860px}',
+    '.foot{margin-top:auto;padding-top:26px;border-top:2px solid ' + hexA(PALETTE.charcoal, .16) + ';'
+      + 'display:flex;justify-content:space-between;align-items:baseline;font-size:23px;font-weight:500}',
+    '.foot .site{color:' + PALETTE.ink + '}',
+    '.foot .cta{color:' + accent + ';font-weight:700}',
+    '</style></head><body>',
+    '<div class="edge"></div><div class="blob p"></div><div class="blob b"></div>',
+    '<div class="card">',
+    '<img class="logo" src="' + logoSrc + '" alt="">',
+    '<div class="kicker">' + esc(card.kicker) + '</div>',
+    '<h1 id="h">' + esc(card.title) + '</h1>',
+    '<div class="sub" id="s">' + esc(card.sub) + '</div>',
+    '<div class="foot"><span class="site">dynamicbodystudio.co.za</span>'
+      + '<span class="cta">' + esc(card.cta) + '</span></div>',
+    '</div></body></html>',
+  ].join('\n');
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function hexA(hex, a) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// ---------------------------------------------------------------------------
+// Render + gate
+// ---------------------------------------------------------------------------
+function pngSize(buf) {
+  if (buf.slice(1, 4).toString() !== 'PNG') return null;
+  return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+}
+
+(async () => {
+  const puppeteer = require('puppeteer-core');
+  if (!fs.existsSync(CHROME)) throw new Error('Chrome not found at ' + CHROME);
+  if (!fs.existsSync(WIDE_LOGO)) throw new Error('wide logo lockup not found at ' + WIDE_LOGO);
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+
+  const faces = await loadFonts();
+  console.log('fonts embedded:');
+  faces.forEach((f) => console.log(`  ${f.fam.padEnd(14)} weight ${f.range.padEnd(8)} ${f.bytes} B`));
+  const logoSrc = dataUri(WIDE_LOGO);
+  console.log(`logo embedded : ${fs.statSync(WIDE_LOGO).size} B`);
+
+  const browser = await puppeteer.launch({
+    executablePath: CHROME,
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-dev-shm-usage', '--font-render-hinting=none', '--force-color-profile=srgb'],
+  });
+
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1200, height: 630, deviceScaleFactor: 1 });
+
+  const report = [];
+  let failed = false;
+
+  for (const card of CARDS) {
+    const html = cardHtml(card, faces, logoSrc);
+    await page.setContent(html, { waitUntil: 'load' });
+    await page.evaluate(() => document.fonts.ready);
+
+    // Measure what the browser ACTUALLY produced. A count cannot see a collision,
+    // so record the geometry the layout gate below needs.
+    //
+    // NOTE: do NOT gate on document.body.scrollWidth. The decorative blobs sit
+    // deliberately off-canvas and overflow:hidden clips them, so scrollWidth is
+    // always > 1200 and every card would "fail" for no reason - a check reading
+    // the wrong pixel. Gate on the TEXT boxes staying inside the frame instead.
+    const m = await page.evaluate(() => {
+      const h = document.getElementById('h');
+      const s = document.getElementById('s');
+      const f = document.querySelector('.foot');
+      const hr = h.getBoundingClientRect(), sr = s.getBoundingClientRect(), fr = f.getBoundingClientRect();
+
+      const outOfFrame = [];
+      const logoEl = document.querySelector('.logo');
+      const lr = logoEl.getBoundingClientRect();
+      const named = { h1: hr, sub: sr, foot: fr, logo: lr };
+      for (const [name, r] of Object.entries(named)) {
+        if (r.left < 0 || r.top < 0 || r.right > 1200 || r.bottom > 630) {
+          outOfFrame.push(`${name} ${Math.round(r.left)},${Math.round(r.top)}..${Math.round(r.right)},${Math.round(r.bottom)}`);
+        }
+      }
+
+      // A box can sit perfectly in frame while the IMAGE inside it is squashed.
+      // That is exactly what happened: the logo box measured 1042x76 for a
+      // 1617x415 source, and the position check above saw nothing wrong.
+      // Compare the rendered aspect against the source aspect.
+      const logoAspect = lr.width / lr.height;
+      const naturalAspect = logoEl.naturalWidth / logoEl.naturalHeight;
+      const logoAspectDrift = Math.abs(logoAspect - naturalAspect) / naturalAspect;
+      const logoDistorted = logoAspectDrift > 0.02;
+
+      // fonts actually applied, not merely requested
+      const usedH = getComputedStyle(h).fontFamily;
+      const bodoniLoaded = document.fonts.check("600 82px 'Bodoni Moda'");
+      const dmLoaded = document.fonts.check("400 27px 'DM Sans'");
+
+      return {
+        hBottom: Math.round(hr.bottom), sBottom: Math.round(sr.bottom), footTop: Math.round(fr.top),
+        lines: Math.round(hr.height / parseFloat(getComputedStyle(h).lineHeight)),
+        fontSize: parseFloat(getComputedStyle(h).fontSize),
+        collide: sr.bottom > fr.top,
+        outOfFrame,
+        logoAspectDrift: Number(logoAspectDrift.toFixed(4)),
+        logoDistorted,
+        logoBox: `${Math.round(lr.width)}x${Math.round(lr.height)}`,
+        usedH,
+        bodoniLoaded,
+        dmLoaded,
+      };
+    });
+
+    const file = path.join(OUT_DIR, card.out);
+    await page.screenshot({ path: file, type: 'png', clip: { x: 0, y: 0, width: 1200, height: 630 } });
+
+    const size = pngSize(fs.readFileSync(file));
+    const reasons = [];
+    if (!size || size.w !== 1200 || size.h !== 630) reasons.push(`size ${size ? size.w + 'x' + size.h : 'not a PNG'}`);
+    if (m.collide) reasons.push('subline collides with footer');
+    if (m.outOfFrame.length) reasons.push('out of frame: ' + m.outOfFrame.join('; '));
+    if (m.logoDistorted) reasons.push(`logo distorted: box ${m.logoBox}, aspect drift ${(m.logoAspectDrift * 100).toFixed(1)}%`);
+    if (m.lines > 3) reasons.push(`${m.lines} headline lines`);
+    if (!m.bodoniLoaded) reasons.push('Bodoni Moda did not load');
+    if (!m.dmLoaded) reasons.push('DM Sans did not load');
+    const ok = reasons.length === 0;
+    if (!ok) failed = true;
+
+    report.push({
+      out: card.out, ...m, w: size ? size.w : 0, h: size ? size.h : 0,
+      bytes: fs.statSync(file).size, ok, reasons,
+    });
+  }
+
+  await browser.close();
+
+  console.log('\n--- CARDS ---');
+  console.log('  file                 size        logoBox    drift  headPx  lines  gap   bytes   verdict');
+  for (const r of report) {
+    const gap = r.footTop - r.sBottom;
+    console.log(`  ${r.out.padEnd(20)} ${String(r.w + 'x' + r.h).padEnd(11)} ${r.logoBox.padEnd(10)} `
+      + `${String((r.logoAspectDrift * 100).toFixed(1) + '%').padEnd(6)} ${String(r.fontSize).padEnd(7)} `
+      + `${String(r.lines).padEnd(6)} ${String(gap).padEnd(5)} ${String(r.bytes).padEnd(7)} ${r.ok ? 'OK' : 'FAIL'}`);
+    if (!r.ok) r.reasons.forEach((x) => console.log(`        ! ${x}`));
+  }
+
+  console.log('\nfonts actually applied in the render:');
+  report.forEach((r) => console.log(`  ${r.out.padEnd(20)} ${r.usedH.split(',')[0].replace(/"/g, '')}  `
+    + `bodoni=${r.bodoniLoaded} dm=${r.dmLoaded}`));
+
+  console.log(failed ? '\nCARDS: FAIL' : '\nCARDS: PASS');
+  process.exit(failed ? 1 : 0);
+})();
+
+// ---------------------------------------------------------------------------
+// WIRING (done separately, per page):
+//   <meta property="og:image" content="https://dynamicbodystudio.co.za/assets/og/<card>.png">
+//   <meta property="og:image:width"  content="1200">
+//   <meta property="og:image:height" content="630">
+//   <meta property="og:image:alt"    content="...">
+//   <meta name="twitter:card" content="summary_large_image">
+// summary_large_image is the point: the site currently declares `summary`, which
+// renders a small square thumbnail and throws away most of the card.
+// ---------------------------------------------------------------------------
