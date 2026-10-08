@@ -28,6 +28,21 @@ const OUT_DIR = path.join(ROOT, 'assets', 'og');
 // accent: 'blue' for studio/pilates, 'pink' for dance. Palette is read from the
 // site's own :root, not invented - see index.html lines 22-26.
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// The cards. One per shareable page.
+//
+// EVERGREEN BY DESIGN - owner decision 2026-10-08. These carry NO year, NO date and
+// NO open/closed state. Reasoning, and it is not cosmetic:
+//   * The intake date already lives in THREE places on the site (home banner, academy
+//     hero, hub card) and all three must move together. A dated card makes it four.
+//   * Social platforms cache an image by URL. A page we can correct in a minute; a
+//     cached card we cannot. A card still reading "2026 intake now open" in January
+//     2027 is worse than a card with no date at all.
+//   * A card's job is to earn the click. The page it links to always carries the
+//     current season, and that is the only place that should.
+// The annual routine therefore does NOT touch assets/og/. If you add a date here,
+// the gate below will fail the build - that is deliberate.
+// ---------------------------------------------------------------------------
 const CARDS = [
   {
     out: 'home.png',
@@ -55,29 +70,43 @@ const CARDS = [
   },
   {
     out: 'dance-academy.png',
-    kicker: '2026 intake now open',
+    kicker: 'Annual intake',
     title: 'Dynamic Dance Academy',
-    sub: '30 November \u2013 19 December 2026 \u00b7 Registration day 21 November',
+    sub: 'Classical, Tap, Hip hop, Contemporary and more \u00b7 ages 4 to 18',
     cta: 'Enrol a dancer',
     accent: 'pink',
   },
   {
     out: 'twinkle-toes.png',
-    kicker: 'Next intake 2027',
+    kicker: 'Ballet for the little ones',
     title: 'Twinkle Toes Ballet',
     sub: 'Ballet for our youngest dancers \u00b7 East London',
-    cta: 'Ask about 2027',
+    cta: 'Ask about the next intake',
     accent: 'pink',
   },
 ];
+
+// Which page uses which card. Checked by the share-preview gate below, so a page
+// pointing at the wrong card - or at the old logo - fails the build.
+const PAGES = {
+  'index.html': 'home.png',
+  'forms.html': 'enrol.png',
+  'enrol.html': 'studio.png',
+  'dance-academy.html': 'dance-academy.png',
+  'twinkle-toes.html': 'twinkle-toes.png',
+};
 
 // ---------------------------------------------------------------------------
 // CONTROLS - prove the layout gate can fail before trusting it.
 // An unproven check is decoration.
 //   OG_CARD_CONTROL_LONG=6   repeat the headline until it MUST overflow the frame
 //   OG_CARD_CONTROL_LOGO=1   reinstate the squashed-logo CSS that caused the bug
-// Both are expected to produce FAIL. If either passes, the gate is not working.
+//   OG_CARD_CONTROL_DATED=1  put a season back into a card, as the old version had
+// All are expected to produce FAIL. If any passes, the gate is not working.
 // ---------------------------------------------------------------------------
+if (process.env.OG_CARD_CONTROL_DATED) {
+  CARDS[3].sub = '30 November \u2013 19 December 2026 \u00b7 Registration day 21 November';
+}
 if (process.env.OG_CARD_CONTROL_LONG) {
   const n = Math.max(1, Number(process.env.OG_CARD_CONTROL_LONG) || 6);
   const filler = Array.from({ length: n }, () => 'Longword').join(' ');
@@ -335,6 +364,17 @@ function pngSize(buf) {
 
     const size = pngSize(fs.readFileSync(file));
     const reasons = [];
+
+    // EVERGREEN POLICY (owner 2026-10-08). A card must not carry a year, a month name or a
+    // date. Social platforms cache the image by URL, so a dated card goes stale and cannot be
+    // corrected quickly - "2026 intake now open" still showing in January 2027 is worse than
+    // no date at all. The season belongs on the page, which is always current. The annual
+    // routine must not need to touch assets/og/.
+    const cardText = [card.kicker, card.title, card.sub, card.cta].join(' | ');
+    const yearHit = cardText.match(/\b(19|20)\d{2}\b/);
+    const monthHit = cardText.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)\b/i);
+    if (yearHit) reasons.push(`NOT EVERGREEN - card text names a year: "${yearHit[0]}"`);
+    if (monthHit) reasons.push(`NOT EVERGREEN - card text names a month: "${monthHit[0]}"`);
     if (!size || size.w !== 1200 || size.h !== 630) reasons.push(`size ${size ? size.w + 'x' + size.h : 'not a PNG'}`);
     if (m.collide) reasons.push('subline collides with footer');
     if (m.outOfFrame.length) reasons.push('out of frame: ' + m.outOfFrame.join('; '));
@@ -366,6 +406,35 @@ function pngSize(buf) {
   console.log('\nfonts actually applied in the render:');
   report.forEach((r) => console.log(`  ${r.out.padEnd(20)} ${r.usedH.split(',')[0].replace(/"/g, '')}  `
     + `bodoni=${r.bodoniLoaded} dm=${r.dmLoaded}`));
+
+  // -------------------------------------------------------------------------
+  // Share-preview gate: every page must point at the right card, at 1200x630,
+  // declare summary_large_image, and keep its preview text evergreen.
+  // -------------------------------------------------------------------------
+  console.log('\n--- SHARE PREVIEW PER PAGE ---');
+  for (const [page, card] of Object.entries(PAGES)) {
+    const src = fs.readFileSync(path.join(ROOT, page), 'utf8');
+    const tag = (re) => (src.match(re) || [])[1];
+    const want = `https://dynamicbodystudio.co.za/assets/og/${card}`;
+    const got = tag(/<meta property="og:image" content="([^"]+)"/);
+    const problems = [];
+    if (got !== want) problems.push(`og:image is ${got || 'MISSING'} (want ${want})`);
+    if (tag(/<meta property="og:image:width" content="([^"]+)"/) !== '1200') problems.push('og:image:width not 1200');
+    if (tag(/<meta property="og:image:height" content="([^"]+)"/) !== '630') problems.push('og:image:height not 630');
+    if (tag(/<meta name="twitter:card" content="([^"]+)"/) !== 'summary_large_image') problems.push('twitter:card not summary_large_image');
+
+    // evergreen preview text - same rule as the cards, same reason
+    const text = ['og:title', 'og:description', 'og:image:alt']
+      .map((k) => tag(new RegExp(`<meta property="?${k}"? content="([^"]+)"`)) || '').join(' | ');
+    const y = text.match(/\b(19|20)\d{2}\b/);
+    const mo = text.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/i);
+    if (y) problems.push(`preview text names a year: "${y[0]}"`);
+    if (mo) problems.push(`preview text names a month: "${mo[0]}"`);
+
+    if (problems.length) failed = true;
+    console.log(`  ${page.padEnd(20)} -> ${card.padEnd(20)} ${problems.length ? 'FAIL' : 'OK'}`);
+    problems.forEach((x) => console.log(`        ! ${x}`));
+  }
 
   console.log(failed ? '\nCARDS: FAIL' : '\nCARDS: PASS');
   process.exit(failed ? 1 : 0);
