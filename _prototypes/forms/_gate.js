@@ -162,6 +162,17 @@ function pageTag(src, eid) {
   return null;
 }
 
+/**
+ * How many live fields the gate can actually CHECK.
+ * A field carrying a rule kind we cannot interpret is skipped, so it must be COUNTED as
+ * unchecked and reported where the verdict is read - otherwise a clean PASS hides it.
+ * Kept as a pure function so the controls harness can prove the count can move.
+ */
+function ruleCoverage(items) {
+  const unchecked = items.filter((q) => q.unknownRule).length;
+  return { checked: items.length - unchecked, unchecked };
+}
+
 /** Which posted names belong to no live question (allowing for the date parts). */function strayFields(posted, items) {
   const allowed = new Set();
   for (const q of items) {
@@ -344,6 +355,12 @@ function standards(src, live) {
       + `  [d[1][10][6]=${live.emailFlag}]`
       + (live.emailFlagKnown ? '' : '   ** UNRECOGNISED FLAG VALUE - the mapping may have changed **'));
 
+    // Rule kinds we cannot interpret: these fields are NOT checked. The count MUST appear in the
+    // SUMMARY, because a reader who skims to the bottom sees a clean PASS and would otherwise never
+    // learn that a field was skipped. A green gate is a SHAPE - it must not be able to hide an
+    // unchecked field behind a clean verdict.
+    const { checked: rulesChecked, unchecked } = ruleCoverage(live.items);
+
     // Field-level caps. Printed every run for the same reason as the email flag: this rule is
     // observable NOWHERE else in the definition, and an unseen cap is an unsubmittable page.
     for (const q of live.items) {
@@ -370,6 +387,8 @@ function standards(src, live) {
     }
 
     console.log(`  fields matched : ${matched}/${live.items.length}`);
+    console.log(`  field rules    : ${rulesChecked} checked, ${unchecked} NOT CHECKED` +
+                (unchecked ? '  (unrecognised rule kind - verify by hand)' : ''));
     console.log(`  stray ids      : ${stray.length ? stray.map(n => 'entry.' + n).join(', ') : 'none'}`);
     console.log(`  bad options    : ${badOpts.length}`);
     badOpts.forEach(b => console.log(`      BAD ${b}`));
@@ -390,7 +409,7 @@ function standards(src, live) {
     if (badOpts.length || stray.length || failed.length || defects.length) hardFail = true;
     summary.push({ name: f.name, matched, total: live.items.length, badOpts: badOpts.length,
                    stray: stray.length, std: `${Object.values(std).filter(Boolean).length}/${Object.keys(std).length}`,
-                   defects: defects.length, blockers: blockers.length });
+                   defects: defects.length, blockers: blockers.length, unchecked });
   }
 
   // hub
@@ -407,10 +426,17 @@ function standards(src, live) {
 
   console.log('\n--- SUMMARY ---');
   summary.forEach(s => console.log(
-    `  ${s.name.padEnd(22)} ${String(s.matched).padStart(2)}/${s.total} fields  badOpts=${s.badOpts}  stray=${s.stray}  std=${s.std}  defects=${s.defects}  blockers=${s.blockers}`));
+    `  ${s.name.padEnd(22)} ${String(s.matched).padStart(2)}/${s.total} fields  badOpts=${s.badOpts}  stray=${s.stray}  std=${s.std}  defects=${s.defects}  blockers=${s.blockers}  unchecked=${s.unchecked}`));
+
+  // A field the gate cannot interpret is NOT a code defect (failing here would be crying wolf and
+  // the gate would be switched off) - but it must never be invisible either.
+  const totalUnchecked = summary.reduce((a, s) => a + s.unchecked, 0);
+  const uncheckedNote = totalUnchecked
+    ? `  ** ${totalUnchecked} field(s) NOT CHECKED - unrecognised rule kind, verify by hand **`
+    : '';
 
   console.log(hardFail
-    ? '\nGATE: FAIL - code defects present'
-    : '\nGATE: PASS - no code defects (blockers listed above are owner/client actions)');
+    ? '\nGATE: FAIL - code defects present' + uncheckedNote
+    : '\nGATE: PASS - no code defects (blockers listed above are owner/client actions)' + uncheckedNote);
   process.exit(hardFail ? 1 : 0);
 })();

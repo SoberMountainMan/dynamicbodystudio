@@ -20,8 +20,8 @@ const gateSrc = fs.readFileSync(path.join(ROOT, '_prototypes', 'forms', '_gate.j
 const start = gateSrc.indexOf('function postedFields');
 const end = gateSrc.indexOf('(async () => {');
 if (start < 0 || end < 0) throw new Error('could not locate the functions in _gate.js');
-const { panelHeadings, preflightCall, emailInputName, standards } = new Function(
-  gateSrc.slice(start, end) + '\nreturn { panelHeadings, preflightCall, emailInputName, standards };'
+const { panelHeadings, preflightCall, emailInputName, standards, ruleCoverage } = new Function(
+  gateSrc.slice(start, end) + '\nreturn { panelHeadings, preflightCall, emailInputName, standards, ruleCoverage };'
 )();
 
 // The live facts each page is checked against. Measured from the published forms via
@@ -147,6 +147,36 @@ for (const [label, item] of NO_FALSE_FAIL) {
   console.log(`  ${ok ? 'ok  ' : '*** FALSE FAIL ***'}  ${label}`);
 }
 
-console.log(baselineOk && allCaught && noFalseFails
+// --- the REPORTING direction: an unchecked field must be VISIBLE, not hidden ----------
+// The gate cannot interpret every rule kind, and it deliberately does not FAIL on one
+// (see MUST NOT FAIL). But a field it cannot check must be COUNTED and printed next to
+// the verdict - otherwise a reader who skims the bottom sees a clean PASS and never
+// learns that a field was skipped. That is the shape-vs-outcome lesson applied to the
+// gate itself, asserted here so it cannot be removed in silence.
+console.log('\n=== REPORTING (an unchecked field must not hide behind a green verdict) ===');
+const COVERAGE = [
+  ['one field with an unrecognised rule', [{ unknownRule: { kind: 203, value: '["1"]' } }], { checked: 0, unchecked: 1 }],
+  ['a readable field only',               [{ maxLen: 10 }],                                 { checked: 1, unchecked: 0 }],
+  ['mixed',                               [{ maxLen: 10 }, { unknownRule: { kind: 999 } }], { checked: 1, unchecked: 1 }],
+];
+let reportingOk = true;
+for (const [label, items, want] of COVERAGE) {
+  const got = ruleCoverage(items);
+  const ok = got.checked === want.checked && got.unchecked === want.unchecked;
+  if (!ok) reportingOk = false;
+  console.log(`  ${ok ? 'ok  ' : '*** WRONG ***'}  ${label.padEnd(38)} checked=${got.checked} unchecked=${got.unchecked}`);
+}
+// The wiring: the count must reach the SUMMARY line and the verdict, not just the helper.
+const WIRING = [
+  ['summary line prints unchecked=',      'unchecked=${s.unchecked}'],
+  ['verdict carries the unchecked note',  'field(s) NOT CHECKED'],
+];
+for (const [label, needle] of WIRING) {
+  const ok = gateSrc.includes(needle);
+  if (!ok) reportingOk = false;
+  console.log(`  ${ok ? 'ok  ' : '*** MISSING ***'}  ${label}`);
+}
+
+console.log(baselineOk && allCaught && noFalseFails && reportingOk
   ? '\n  The standards are real: green on the shipped pages, red on every mutation, and quiet on rules they cannot read.'
   : '\n  SOMETHING SURVIVED OR A FALSE FAIL APPEARED - investigate before trusting the gate.');
