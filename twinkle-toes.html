@@ -76,6 +76,13 @@
 
   .upload-note{background:#fff8fb;border:1.5px solid var(--pink);border-radius:12px;padding:14px 16px;font-size:.88rem;margin-bottom:20px}
 
+  /* Closed-for-the-season notice — see the SEASONAL STATE block below */
+  .closed{background:var(--soft);border:1.5px solid #ddd;border-radius:14px;padding:22px;margin:0 0 26px}
+  .closed h2{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:1.25rem;margin-bottom:8px}
+  .closed p{font-size:.95rem;margin-bottom:14px}
+  .closed p:last-child{margin-bottom:0}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
   footer{background:var(--charcoal);color:#e8e8e8;padding:30px 0;text-align:center;font-size:.88rem}
   footer a{color:var(--blue-soft);text-decoration:none}
 
@@ -107,6 +114,8 @@
   <div class="wrap">
     <h1>Twinkle Toes Ballet</h1>
     <p>Enrol your little ballerina. Vicky will confirm the class on WhatsApp.</p>
+    <!-- Ballet runs at a different time of year to the Dance Academy. -->
+    <p class="intake-note" style="font-size:.85rem;color:#8a8c8b;margin-top:14px">Closed for 2026 &middot; reopens early 2027</p>
     <p class="print-head">The Dynamic Body Studio &middot; 12 Strangers Way, Dorchester Heights, East London &middot; 061 587 5852</p>
   </div>
 </section>
@@ -120,6 +129,26 @@
       <a class="btn btn-primary" href="https://wa.me/27615875852?text=Hi%20Vicky%2C%20I%20just%20sent%20my%20Twinkle%20Toes%20enrolment.">Message Vicky on WhatsApp</a>
       <a class="btn btn-secondary" href="index.html">Back to site</a>
     </div>
+  </div>
+
+  <!-- ============================================================
+       SEASONAL STATE  ·  Twinkle Toes ballet is CLOSED for 2026.
+       ------------------------------------------------------------
+       The form is left on the page so parents can see what is asked
+       and print it, but the submit button is DISABLED so nobody can
+       enrol into a closed intake. To reopen for 2027:
+         1. Remove the `disabled` attribute on the submit button below.
+         2. Delete this .closed block.
+         3. Update the "Closed for 2026" line in the hero.
+         4. Update index.html's seasonal banner and forms.html.
+       Before reopening, Vicky must make entry.2009902291 (file upload)
+       optional - see the DELIBERATE OMISSIONS note under the form.
+       ============================================================ -->
+  <div class="closed">
+    <h2>Enrolment for 2026 has closed</h2>
+    <p>Twinkle Toes Ballet runs once a year and the 2026 intake is now full. The next intake opens in early 2027.</p>
+    <p>You can still see what the form asks, or print it to prepare. To ask about a place or the waiting list, message Vicky on WhatsApp.</p>
+    <p><a class="btn btn-primary" href="https://wa.me/27615875852?text=Hi%20Vicky%2C%20I%27d%20like%20to%20ask%20about%20Twinkle%20Toes%20Ballet%20for%202027.">Ask Vicky about 2027</a></p>
   </div>
 
   <form id="tt" method="post" target="hidden_iframe"
@@ -224,7 +253,8 @@
     </div>
 
     <div class="submit-row">
-      <button type="submit" class="btn btn-primary">Send enrolment</button>
+      <!-- DISABLED: 2026 intake closed. Remove `disabled` to reopen. -->
+      <button type="submit" class="btn btn-primary" disabled>Enrolment closed for 2026</button>
       <button type="button" class="btn-print" onclick="window.print()">Print this form</button>
       <a class="btn btn-secondary" href="https://wa.me/27615875852">Rather ask on WhatsApp</a>
     </div>

@@ -50,6 +50,15 @@
   .btn-primary{background:var(--blue);color:#fff}
   .btn-secondary{background:#fff;color:var(--charcoal);border:1.5px solid var(--blue-soft)}
 
+  /* Seasonal intake banner — see the SEASONAL INTAKE block in the body */
+  .intake{background:#fff;border-top:1px solid #eee;border-bottom:1px solid #eee;text-align:center;padding:44px 24px}
+  .intake-tag{display:inline-block;background:var(--pink);color:#fff;font-size:.72rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:5px 14px;border-radius:999px;margin-bottom:16px}
+  .intake h2{margin-bottom:10px}
+  .intake p{max-width:620px;margin:0 auto 22px}
+  .intake-note{font-size:.85rem;color:#8a8c8b;margin:22px auto 0}
+  .intake-closed{background:var(--soft)}
+  .intake-closed .intake-tag{background:#9aa0a6}
+
   section{padding:64px 0}
   h2{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(1.5rem,3.5vw,2.1rem);margin-bottom:12px}
   .lead{max-width:640px;margin-bottom:32px}
@@ -98,6 +107,35 @@
   <div class="cta-row">
     <a class="btn btn-primary" href="https://wa.me/27615875852?text=Hi%2C%20I%27d%20like%20to%20enquire%20about%20classes%20at%20The%20Dynamic%20Body%20Studio.">Enquire on WhatsApp</a>
     <a class="btn btn-secondary" href="https://maps.google.com/?q=The+Dynamic+Body+Studio,+12+Strangers+Way,+Dorchester+Heights,+East+London">Get directions</a>
+  </div>
+</section>
+
+<!-- ============================================================
+     SEASONAL INTAKE BANNER  ·  the ONE place to update each year.
+     ------------------------------------------------------------
+     CURRENT:  Dance Academy 2026 — OPEN
+     BALLET:   Twinkle Toes — CLOSED for 2026, reopens early 2027.
+
+     The academy and the ballet run at DIFFERENT times of year, so this
+     banner shows whichever one is open. To swap it:
+       1. Edit the heading, dates and button below.
+       2. Point the button at the open intake (dance-academy.html or
+          twinkle-toes.html).
+       3. Update those two pages plus forms.html so they agree — the
+          closed one must say so, or people enrol into nothing.
+     Do NOT leave a stale "now open" here: this is the first thing a
+     parent sees, and it is the link Vicky shares.
+     ============================================================ -->
+<section class="intake">
+  <div class="wrap">
+    <p class="intake-tag">Now open</p>
+    <h2>Dynamic Dance Academy 2026 intake</h2>
+    <p>Enrolment for the 2026 academy year is open &mdash; Classical, Tap, Hip hop, Contemporary and more, ages 4 to 18. Registration day is 21 November 2026.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="dance-academy.html">Enrol for Dance Academy</a>
+      <a class="btn btn-secondary" href="forms.html">All forms</a>
+    </div>
+    <p class="intake-note">Ballet (Twinkle Toes) is closed for 2026 and reopens early 2027.</p>
   </div>
 </section>
 

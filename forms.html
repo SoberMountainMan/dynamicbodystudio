@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <!--
-  PROTOTYPE — forms hub.
-  Links to the three branded form prototypes. The -prototype filenames are deliberate:
-  nothing here goes live until the file-upload blockers are cleared. On deploy day rename to
-    enrol.html          -> enrol.html
-    twinkle-toes.html   -> twinkle-toes.html
-    dance-academy.html  -> dance-academy.html
-    forms.html          -> forms.html
-  and update the links below.
+  Forms hub — LIVE at https://dynamicbodystudio.co.za/forms.html
+  Links to the three branded enrolment pages.
+
+  SEASONAL STATE — keep this in step with index.html's intake banner and the pages themselves.
+  Ballet and the Dance Academy run at DIFFERENT times of year, so one is normally closed.
+    CURRENT: Dance Academy 2026 = OPEN.  Twinkle Toes Ballet = CLOSED for 2026 (reopens early 2027).
+  When the season turns, update the badges and button labels below, plus:
+    index.html (the intake banner), twinkle-toes.html, dance-academy.html
 -->
 <html lang="en">
 <head>
@@ -65,6 +65,14 @@
   .card:nth-child(3) .go{background:var(--blue-soft)}
   .card .go:hover{filter:brightness(1.06)}
 
+  /* Seasonal state: open vs closed */
+  .badge{display:inline-block;align-self:flex-start;font-size:.7rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:4px 12px;border-radius:999px;margin-bottom:12px}
+  .badge-open{background:var(--pink);color:#fff}
+  .badge-closed{background:#e6e6e6;color:#7a7d7c}
+  .card.closed{background:#fafafa;border-top-color:#ddd}
+  .card.closed h2{color:#8a8c8b}
+  .card.closed .go{background:#fff;color:#8a8c8b;border:1.5px solid #ddd;font-weight:500}
+
   .note{background:var(--soft);border-radius:14px;padding:26px;text-align:center;margin-top:8px}
   .note p{margin-bottom:16px}
   .btn{display:inline-block;padding:13px 26px;border-radius:999px;font-weight:700;font-size:.98rem}
@@ -98,7 +106,7 @@
   <div class="wrap">
     <img src="assets/logo.png" alt="The Dynamic Body Studio logo">
     <h1>Join us</h1>
-    <p>Pick the class you&rsquo;re enrolling for. Each form takes about two minutes.</p>
+    <p>The <strong>Dance Academy 2026</strong> intake is open now. Ballet is closed for 2026. Each form takes about two minutes.</p>
   </div>
 </section>
 
@@ -106,15 +114,17 @@
   <div class="wrap">
     <div class="grid">
 
-      <div class="card">
+      <div class="card closed">
+        <span class="badge badge-closed">Closed for 2026</span>
         <h2>Twinkle Toes Ballet</h2>
-        <p>For our little ballerinas. Ballet classes with a once-off R50 registration and termly or monthly fees.</p>
-        <a class="go" href="twinkle-toes.html">Enrol a ballerina</a>
+        <p>For our little ballerinas. Ballet runs once a year &mdash; the 2026 intake has closed. The next intake opens in early 2027.</p>
+        <a class="go" href="twinkle-toes.html">See what&rsquo;s needed</a>
       </div>
 
       <div class="card">
-        <h2>Dynamic Dance Academy</h2>
-        <p>Classical, Tap, Hip hop, Contemporary, Spanish and more. Groups from Minis (ages 3&ndash;6) through to Elite Masters.</p>
+        <span class="badge badge-open">Open now</span>
+        <h2>Dynamic Dance Academy 2026</h2>
+        <p>Classical, Tap, Hip hop, Contemporary, Afro-Fusion and more. Groups from Minis (ages 4&ndash;6) through to Elite Masters. Registration day 21 November 2026.</p>
         <a class="go" href="dance-academy.html">Enrol a dancer</a>
       </div>
 
