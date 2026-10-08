@@ -75,16 +75,22 @@ async function liveFields(id) {
     const eid   = q[0];
     const opts  = (q[1] ?? []).map(o => o[0]).filter(v => v && typeof v === 'string');
     const req   = !!(q[2] & 1);
-    // A FIELD-LEVEL VALIDATION RULE lives at q[4], and nothing else in the definition exposes
-    // it. Measured 2026-10-08: the academy indemnity carries q[4] = [[6,202,["10"]]] - a
-    // MAXIMUM LENGTH of 10. The page asked the parent for a 12-character phrase, so Google
-    // rejected EVERY academy submission with a 400 while every other check stayed green: the
-    // field NAME was right, the field was PRESENT, the options matched. Only the VALUE was
-    // impossible. Never encode this shape from memory - it was read off the live form.
-    const rule   = Array.isArray(q[4]) ? q[4][0] : null;
-    const maxLen = Array.isArray(rule) && rule[0] === 6 && Array.isArray(rule[2])
+    // rule[1] is the rule KIND, and only ONE kind is known. 202 = MAXIMUM character count,
+    // and that is MEASURED rather than guessed: the academy indemnity carries
+    // [[6,202,["10"]]], and a 12-character value is rejected with a 400 while <=10 is
+    // accepted. Any other kind - a minimum, a regex, a number range - is reported as
+    // UNRECOGNISED so the gate WARNS instead of inventing a limit. Reading a minimum of 1
+    // as "max 1 character" would fail a perfectly good page, which is the same fail-open
+    // trap as the email flag, inverted. Never let a guessed constant decide the verdict.
+    const RULE_MAX_LEN = 202;
+    const rule = Array.isArray(q[4]) ? q[4][0] : null;
+    const hasRule = Array.isArray(rule) && rule[0] === 6;
+    const ruleKind = hasRule ? rule[1] : null;
+    const maxLen = hasRule && ruleKind === RULE_MAX_LEN && Array.isArray(rule[2])
       ? (Number(rule[2][0]) || null) : null;
-    if (typeof eid === 'number') out.push({ eid, label, type, required: req, options: opts, maxLen });
+    const unknownRule = hasRule && ruleKind !== RULE_MAX_LEN
+      ? { kind: ruleKind, value: JSON.stringify(rule[2]) } : null;
+    if (typeof eid === 'number') out.push({ eid, label, type, required: req, options: opts, maxLen, unknownRule });
   }
   // The description (d[1][0]) is where the client puts DATES - e.g. "30 November - 19 December 2026".
   // We shipped a page for months without it, because this gate only ever read the question items.
@@ -341,6 +347,11 @@ function standards(src, live) {
     // Field-level caps. Printed every run for the same reason as the email flag: this rule is
     // observable NOWHERE else in the definition, and an unseen cap is an unsubmittable page.
     for (const q of live.items) {
+      if (q.unknownRule) {
+        console.log(`  field rule : entry.${q.eid} UNRECOGNISED rule kind ${q.unknownRule.kind}`
+          + ` value ${q.unknownRule.value}  | ${JSON.stringify(String(q.label || '').slice(0, 34))}`
+          + `   ** the gate cannot interpret this - verify this field BY HAND, it is not being checked **`);
+      }
       if (!q.maxLen) continue;
       const tag = pageTag(src, q.eid);
       const ml = tag && tag.match(/\bmaxlength=["']?(\d+)/i);
