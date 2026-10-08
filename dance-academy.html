@@ -4,15 +4,19 @@
   Backend: Vicky's existing Google Form
     published id 1FAIpQLSebxWQdjCNynd54xYgWCmeKOJ2i01pqzXktQAQwulba8MgK1w
     edit id     11uNYzHIQn483yC-5vU2EulHTHtvKTZYebHUWVkXQnCY
-  NOTE: this is the 2025 edition (registration day 22 Nov 2025). Confirm with Vicky
-  whether it is the current one before publishing — she also has a 2026 form titled the same.
+  UPDATED 2026-10-08 to match Vicky's live form, which is now titled "Dynamic Dance Academy 2026".
+  She changed it since the September build: fees re-priced, Minis age band 3-6 -> 4-6, one style
+  added (Afro-Fusion) and three removed, registration day moved to 21 Nov 2026, and a new
+  REQUIRED "Mom/Guardian Name" field plus an optional "Important info" box added.
+  Re-run `_prototypes/forms/_gate.js` after any change here — a stale option string posts
+  without error and silently saves nothing.
 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dynamic Dance Academy — Enrol</title>
-<meta name="description" content="Enrol at the Dynamic Dance Academy, East London. Classical, Tap, Hip hop, Contemporary and more for ages 3 to 18.">
+<title>Dynamic Dance Academy 2026 — Enrol</title>
+<meta name="description" content="Enrol at the Dynamic Dance Academy, East London. Classical, Tap, Hip hop, Contemporary and more for ages 4 to 18.">
 <link rel="canonical" href="https://dynamicbodystudio.co.za/dance-academy.html">
 <meta property="og:title" content="Dynamic Dance Academy — Enrol">
 <meta property="og:description" content="Enrol at the Dynamic Dance Academy, East London.">
@@ -114,8 +118,8 @@
 
 <section class="hero">
   <div class="wrap">
-    <h1>Dynamic Dance Academy</h1>
-    <p>Enrol for the year. Classical, Tap, Hip hop, Contemporary and more, ages 3 to 18.</p>
+    <h1>Dynamic Dance Academy 2026</h1>
+    <p>Enrol for the year. Classical, Tap, Hip hop, Contemporary and more, ages 4 to 18.</p>
     <p class="print-head">The Dynamic Body Studio &middot; 12 Strangers Way, Dorchester Heights, East London &middot; 061 587 5852</p>
   </div>
 </section>
@@ -146,8 +150,11 @@
       <label class="req" for="d1">Name &amp; surname</label>
       <input type="text" id="d1" name="entry.383369535" required>
 
-      <label class="req" for="d2">Age</label>
-      <input type="text" id="d2" name="entry.1699711477" required>
+      <label class="req" for="d2">Age &amp; date of birth</label>
+      <input type="text" id="d2" name="entry.1699711477" required placeholder="e.g. 9 — 14 March 2017">
+
+      <label class="req" for="d7">Mom / guardian name</label>
+      <input type="text" id="d7" name="entry.105612770" required>
 
       <label class="req" for="d3">Contact cell number</label>
       <input type="tel" id="d3" name="entry.248620316" required placeholder="061 587 5852">
@@ -163,10 +170,11 @@
       <legend>Academy group</legend>
       <label class="req">Which group?</label>
       <div class="opts">
-        <label class="opt"><input type="radio" name="entry.435469172" value="Minis: Ages 3-6yrs" required><span>Minis &mdash; ages 3 to 6</span></label>
+        <!-- Values must match her form byte-for-byte. "Minis: Ages 4-6yrs" is 4, not 3. -->
+        <label class="opt"><input type="radio" name="entry.435469172" value="Minis: Ages 4-6yrs" required><span>Minis &mdash; ages 4 to 6</span></label>
         <label class="opt"><input type="radio" name="entry.435469172" value="Juniors: Grade 1-7"><span>Juniors &mdash; Grade 1 to 7</span></label>
         <label class="opt"><input type="radio" name="entry.435469172" value="Seniors: Grade 8-12"><span>Seniors &mdash; Grade 8 to 12</span></label>
-        <label class="opt"><input type="radio" name="entry.435469172" value="Elite Masters"><span>Elite Masters</span></label>
+        <label class="opt"><input type="radio" name="entry.435469172" value="Elite Masters (adults)"><span>Elite Masters (adults)</span></label>
       </div>
     </fieldset>
 
@@ -181,11 +189,11 @@
         <label class="opt"><input type="checkbox" name="entry.1342010349" value="Township"><span>Township</span></label>
         <label class="opt"><input type="checkbox" name="entry.1342010349" value="Belly Dancing"><span>Belly Dancing</span></label>
         <label class="opt"><input type="checkbox" name="entry.1342010349" value="Contemporary"><span>Contemporary</span></label>
-        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Modern"><span>Modern</span></label>
+        <!-- Afro-Fusion added by Vicky for 2026. Modern / Funky fun movement / Drama-Acting were
+             removed from her form, so they are gone here too - posting them would save nothing. -->
+        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Afro-Fusion"><span>Afro-Fusion</span></label>
         <label class="opt"><input type="checkbox" name="entry.1342010349" value="Spanish"><span>Spanish</span></label>
         <label class="opt"><input type="checkbox" name="entry.1342010349" value="Cabaret"><span>Cabaret</span></label>
-        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Funky fun movement"><span>Funky fun movement</span></label>
-        <label class="opt"><input type="checkbox" name="entry.1342010349" value="Drama/Acting"><span>Drama / Acting</span></label>
         <label class="opt"><input type="checkbox" name="entry.1342010349" value="Mini Group"><span>Mini Group</span></label>
       </div>
       <p class="err" id="styleErr">Please choose at least one style.</p>
@@ -195,11 +203,13 @@
       <legend>Fees</legend>
       <label class="req">Academy fees</label>
       <div class="opts">
-        <label class="opt"><input type="radio" name="entry.1472974057" value="Minis: R650" required><span>Minis: R650</span></label>
-        <label class="opt"><input type="radio" name="entry.1472974057" value="2 styles R650"><span>2 styles &mdash; R650</span></label>
-        <label class="opt"><input type="radio" name="entry.1472974057" value="4 styles R960"><span>4 styles &mdash; R960</span></label>
+        <!-- 2026 pricing. Note the odd punctuation on the first two - a colon on one,
+             no colon on the other. That is how her form stores them; do not tidy. -->
+        <label class="opt"><input type="radio" name="entry.1472974057" value="2 styles: R680" required><span>2 styles &mdash; R680</span></label>
+        <label class="opt"><input type="radio" name="entry.1472974057" value="4 styles R980"><span>4 styles &mdash; R980</span></label>
         <label class="opt"><input type="radio" name="entry.1472974057" value="6 styles R1200"><span>6 styles &mdash; R1200</span></label>
         <label class="opt"><input type="radio" name="entry.1472974057" value="8 styles R1300"><span>8 styles &mdash; R1300</span></label>
+        <label class="opt"><input type="radio" name="entry.1472974057" value="Mini Dance Group R650"><span>Mini Dance Group &mdash; R650</span></label>
       </div>
     </fieldset>
 
@@ -237,7 +247,12 @@
     </div>
 
     <div class="box">
-      <p><strong>Registration day.</strong> I understand I am to attend the registration day. The registration fee is payable in cash on the day.</p>
+      <label for="d8">Anything important we should know about the dancer?</label>
+      <textarea id="d8" name="entry.1707006687" placeholder="Allergies, medical notes, or anything that helps us look after your dancer. Optional."></textarea>
+    </div>
+
+    <div class="box">
+      <p><strong>Registration day.</strong> I understand I am to attend the registration day on <strong>21 November 2026, between 08:00 and 10:00</strong>. The registration fee is R300, payable in cash on the day.</p>
       <label class="opt"><input type="checkbox" name="entry.663836416" value="Yes" id="reg" required><span>Yes, I understand</span></label>
       <p class="err" id="regErr">Please confirm the registration day.</p>
     </div>

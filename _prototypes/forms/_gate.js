@@ -18,7 +18,7 @@
 
 const FORMS = [
   { file: 'enrol.html',          name: 'Studio enrolment',     id: '1FAIpQLScUjlphaXJ6ksgb_6ytG1qITaeXotwPHDWMG0FdgS-SIDGBfg' },
-  { file: 'dance-academy.html',  name: 'Dance Academy (2025)', id: '1FAIpQLSebxWQdjCNynd54xYgWCmeKOJ2i01pqzXktQAQwulba8MgK1w' },
+  { file: 'dance-academy.html',  name: 'Dance Academy 2026', id: '1FAIpQLSebxWQdjCNynd54xYgWCmeKOJ2i01pqzXktQAQwulba8MgK1w' },
   { file: 'twinkle-toes.html',   name: 'Twinkle Toes Ballet',  id: '1FAIpQLSdEv2X_6RxEyls1uzopEZ9L0VUf2szAHLSz847LRCnrJPpUCA' },
 ];
 
