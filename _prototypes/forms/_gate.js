@@ -138,7 +138,40 @@ function optionValues(src, eid) {
   return vals;
 }
 
+// Every string the status panel can actually DISPLAY. Taken from the panel's default
+// <h2> and from each `head.innerHTML = '...'` assignment in the script - deliberately
+// NOT from a plain text search, because the surrounding comments legitimately mention
+// the old wording ("this page used to say ...") and a naive search would fail on them.
+function panelHeadings(src) {
+  const out = [];
+  const m = src.match(/<div id=["']thanks["'][^>]*>[\s\S]*?<h2[^>]*>([\s\S]*?)<\/h2>/i);
+  if (m) out.push(m[1]);
+  for (const mm of src.matchAll(/head\.innerHTML\s*=\s*'([^']*)'/g)) out.push(mm[1]);
+  return out.map((s) => s.replace(/\s+/g, ' ').trim());
+}
+
+// The ACTUAL preflight call, parsed out of the script - not a text search. A text search
+// for 'no-cors' passes even when the real call says mode:'cors', because the surrounding
+// comment mentions the correct value. That mutation survived the first version of this
+// check, and it is not cosmetic: with mode:'cors' the probe is blocked by CORS, always
+// rejects, and NO FORM COULD EVER BE SUBMITTED. Read the call, not the prose.
+function preflightCall(src) {
+  const m = src.match(/fetch\(\s*['"]([^'"]+)['"]\s*,\s*\{([^}]*)\}/);
+  return m ? { url: m[1], opts: m[2] } : null;
+}
+
 function standards(src) {
+  const heads = panelHeadings(src);
+  const pf = preflightCall(src);
+
+  // SUBMISSION-TRUST (owner 2026-10-08). A static page cannot know whether Google
+  // accepted a submission: the hidden iframe fires onload for a rejection page and for
+  // a failed load alike, and every cross-origin-readable property of the frame is
+  // identical in both cases (measured, three cases, 2026-10-08). The panel therefore
+  // must not claim receipt, and the page must do the two things that ARE possible:
+  // refuse to submit when offline, and pre-flight the host with fetch(mode:'no-cors').
+  const receiptClaim = /(thank you|thanks\b|is in\b|has been received|recorded|submitted)/i;
+
   const checks = {
     'title tag':        /<title>[^<]+<\/title>/.test(src),
     'viewport meta':    /name=["']viewport["']/.test(src),
@@ -152,6 +185,17 @@ function standards(src) {
     'no stale fbzx':    !/name=["']fbzx["']/.test(src),
     'fvv+pageHistory':  /name=["']fvv["']/.test(src) && /name=["']pageHistory["']/.test(src),
     'print css':        /@media\s+print/.test(src),
+
+    // --- submission trust ------------------------------------------------------
+    // No state of the panel may assert that the form was received.
+    'panel: no receipt claim': heads.length >= 4 && !heads.some((h) => receiptClaim.test(h)),
+    // The two states that must exist so a failure is never reported as success.
+    'panel: refusal states':   /'offline'/.test(src) && /'unreachable'/.test(src) && /'unsure'/.test(src),
+    // Refuse to submit with no connection at all.
+    'offline guard':           /navigator\.onLine\s*===\s*false/.test(src),
+    // Probe the POST host before submitting - the only real transport signal available.
+    // Read from the parsed call, so the comment cannot satisfy it.
+    'reachability preflight':  !!pf && /generate_204/.test(pf.url) && /no-cors/.test(pf.opts),
   };
   return checks;
 }

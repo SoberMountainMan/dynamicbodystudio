@@ -146,9 +146,17 @@
 
 <div class="wrap">
 
-  <div id="thanks">
-    <h2>Thank you &mdash; your enrolment is in.</h2>
-    <p>Vicky will confirm your place and the registration day on WhatsApp.</p>
+  <!-- STATUS PANEL - three states, set by showPanel() in the script below.
+       It deliberately does NOT say "your enrolment is in" / "thank you, submitted".
+       A static page posting to Google Forms CANNOT know whether Google accepted the
+       submission: the hidden iframe fires onload for a rejection page just as it does
+       for a confirmation page, and the response is cross-origin so it cannot be read.
+       So the panel claims only what is knowable, and the WhatsApp step is the
+       verification - it works whether or not the form landed, so no parent is ever
+       stranded. Do not "improve" this into a bare success message. -->
+  <div id="thanks" role="status" aria-live="polite">
+    <h2 id="thanksHead">Almost done &mdash; confirm on WhatsApp</h2>
+    <p id="thanksBody">Your details are on their way to the studio. Tap below and Vicky will confirm your place.</p>
     <div class="submit-row" style="justify-content:center">
       <a class="btn btn-primary" href="https://wa.me/27615875852?text=Hi%20Vicky%2C%20I%20just%20sent%20my%20Dance%20Academy%20enrolment.">Message Vicky on WhatsApp</a>
       <a class="btn btn-secondary" href="index.html">Back to site</a>
@@ -309,6 +317,7 @@
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 var submitted = false;
+var settled = false;
 
 function submitForm(){
   var ok = true;
@@ -345,11 +354,71 @@ function submitForm(){
     return false;
   }
   document.getElementById('formErr').style.display='none';
-  submitted = true;
-  return true;
+
+  // Do NOT let an offline parent be told it worked - see the panel comment above.
+  if(navigator.onLine === false){
+    showPanel('offline');
+    return false;
+  }
+
+  // PRE-FLIGHT REACHABILITY PROBE - see the long note in enrol.html. Summary: the hidden
+  // iframe's onload fires for a rejection AND for a failed load, and every
+  // cross-origin-readable property of the frame is identical in both cases (measured).
+  // So "onload fired" proves nothing. fetch(mode:'no-cors') to the same host we post to
+  // does separate reachable from unreachable. Fail OPEN on a slow probe.
+  var posting = false;
+  function go(){
+    if(posting) return;
+    posting = true;
+    submitted = true;
+    setTimeout(function(){ if(submitted && !settled) showPanel('unsure'); }, 15000);
+    document.getElementById('dda').submit();
+  }
+
+  var slow = new Promise(function(res){ setTimeout(function(){ res('timeout'); }, 6000); });
+  Promise.race([
+    fetch('https://docs.google.com/generate_204', { mode: 'no-cors', cache: 'no-store' })
+      .then(function(){ return 'reachable'; }),
+    slow,
+  ]).then(function(what){
+    go();
+  }).catch(function(){
+    showPanel('unreachable');
+  });
+
+  return false;   // submission is handled by go() once the probe answers
 }
 
+// The iframe loaded, which means Google replied with SOMETHING - not that it accepted.
 function showThanks(){
+  showPanel('sent');
+}
+
+function showPanel(kind){
+  if(settled) return;
+  settled = true;
+
+  var head = document.getElementById('thanksHead');
+  var body = document.getElementById('thanksBody');
+
+  if(kind === 'offline'){
+    head.innerHTML = 'Not sent &mdash; you appear to be offline';
+    body.innerHTML = 'This form has <strong>not</strong> been sent. Reconnect and try again, '
+                   + 'or tap below to message Vicky directly.';
+  } else if(kind === 'unreachable'){
+    head.innerHTML = 'Not sent &mdash; we could not reach the enrolment system';
+    body.innerHTML = 'This form has <strong>not</strong> been sent. Check your connection and '
+                   + 'try again, or tap below to message Vicky directly.';
+  } else if(kind === 'unsure'){
+    head.innerHTML = 'We could not confirm that went through';
+    body.innerHTML = 'Your details may not have reached the studio. Tap below and Vicky '
+                   + 'will sort it out with you.';
+  } else {
+    head.innerHTML = 'Almost done &mdash; confirm on WhatsApp';
+    body.innerHTML = 'Your details are on their way to the studio. Tap below and Vicky will '
+                   + 'confirm your place &mdash; that message is how we make sure nothing gets missed.';
+  }
+
   document.getElementById('dda').style.display='none';
   document.getElementById('thanks').style.display='block';
   window.scrollTo({top:0, behavior:'smooth'});

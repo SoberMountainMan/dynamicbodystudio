@@ -118,9 +118,17 @@
 
 <div class="wrap">
 
-  <div id="thanks">
-    <h2>Thank you &mdash; your form is in.</h2>
-    <p>Vicky will confirm your spot on WhatsApp within a day.</p>
+  <!-- STATUS PANEL - three states, set by showPanel() in the script below.
+       It deliberately does NOT say "your form is in" / "thank you, submitted".
+       A static page posting to Google Forms CANNOT know whether Google accepted the
+       submission: the hidden iframe fires onload for a rejection page just as it does
+       for a confirmation page, and the response is cross-origin so it cannot be read.
+       So the panel claims only what is knowable, and the WhatsApp step is the
+       verification - it works whether or not the form landed, so no parent is ever
+       stranded. Do not "improve" this into a bare success message. -->
+  <div id="thanks" role="status" aria-live="polite">
+    <h2 id="thanksHead">Almost done &mdash; confirm on WhatsApp</h2>
+    <p id="thanksBody">Your details are on their way to the studio. Tap below and Vicky will confirm your spot.</p>
     <div class="submit-row" style="justify-content:center">
       <a class="btn btn-primary" href="https://wa.me/27615875852?text=Hi%20Vicky%2C%20I%20just%20sent%20my%20enrolment%20form.">Message Vicky on WhatsApp</a>
       <a class="btn btn-secondary" href="index.html">Back to site</a>
@@ -266,6 +274,7 @@
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 var submitted = false;
+var settled = false;
 
 function submitForm(){
   if(!document.getElementById('popia').checked){
@@ -282,6 +291,15 @@ function submitForm(){
   }
   document.getElementById('formErr').style.display = 'none';
 
+  // Do NOT let an offline parent be told it worked. Previously the hidden iframe's
+  // onload fired on the browser's own error page, so a submission with no connection
+  // still produced a success panel. That is the failure mode this whole panel exists
+  // to prevent.
+  if(navigator.onLine === false){
+    showPanel('offline');
+    return false;
+  }
+
   // Stamp the required DATE field with today. A Google Forms date question posts as
   // three separate fields (_year/_month/_day) - NOT as one ISO string. Built from local
   // date parts, never toISOString(), which shifts to UTC and would post yesterday's date
@@ -291,11 +309,77 @@ function submitForm(){
   document.getElementById('dateMonth').value = d.getMonth() + 1;
   document.getElementById('dateDay').value   = d.getDate();
 
-  submitted = true;
-  return true;   // post to the hidden iframe, stay on the page
+  // PRE-FLIGHT REACHABILITY PROBE - this is the one real transport signal a static page
+  // has, and it exists because of a measurement, not a guess.
+  //
+  // The hidden iframe's onload fires for a Google REJECTION page, and it also fires when
+  // the load fails outright (the browser's own error page). Every property of the frame
+  // that stays readable across origins - contentDocument, contentWindow.length, closed -
+  // is IDENTICAL between a real cross-origin reply and an error page. Measured, all three
+  // cases. So "onload fired" proves nothing at all, which is exactly why this page used
+  // to say "your form is in" for a submission that never left the building.
+  //
+  // fetch(..., {mode:'no-cors'}) to the SAME HOST we post to DOES separate the states:
+  // it resolves (opaque) when reachable, and REJECTS on offline or a network-layer
+  // failure. Verified in headless Chrome: resolves in ~560 ms, rejects in ~8 ms.
+  //
+  // Fail OPEN on a slow probe: if we cannot get an answer we submit anyway, because
+  // blocking a real enrolment is worse than a confirmation we are unsure about.
+  var posting = false;
+  function go(){
+    if(posting) return;
+    posting = true;
+    submitted = true;
+    setTimeout(function(){ if(submitted && !settled) showPanel('unsure'); }, 15000);
+    document.getElementById('enrol').submit();
+  }
+
+  var slow = new Promise(function(res){ setTimeout(function(){ res('timeout'); }, 6000); });
+  Promise.race([
+    fetch('https://docs.google.com/generate_204', { mode: 'no-cors', cache: 'no-store' })
+      .then(function(){ return 'reachable'; }),
+    slow,
+  ]).then(function(what){
+    go();                       // reachable, or we could not tell - try it either way
+  }).catch(function(){
+    showPanel('unreachable');   // the request never left the browser
+  });
+
+  return false;   // submission is handled by go() once the probe answers
 }
 
+// The iframe loaded, which means Google replied with SOMETHING. It does not mean
+// Google accepted it - a rejection renders an error page in the same iframe. So the
+// copy below claims dispatch, never receipt.
 function showThanks(){
+  showPanel('sent');
+}
+
+function showPanel(kind){
+  if(settled) return;
+  settled = true;
+
+  var head = document.getElementById('thanksHead');
+  var body = document.getElementById('thanksBody');
+
+  if(kind === 'offline'){
+    head.innerHTML = 'Not sent &mdash; you appear to be offline';
+    body.innerHTML = 'This form has <strong>not</strong> been sent. Reconnect and try again, '
+                   + 'or tap below to message Vicky directly.';
+  } else if(kind === 'unreachable'){
+    head.innerHTML = 'Not sent &mdash; we could not reach the enrolment system';
+    body.innerHTML = 'This form has <strong>not</strong> been sent. Check your connection and '
+                   + 'try again, or tap below to message Vicky directly.';
+  } else if(kind === 'unsure'){
+    head.innerHTML = 'We could not confirm that went through';
+    body.innerHTML = 'Your details may not have reached the studio. Tap below and Vicky '
+                   + 'will sort it out with you.';
+  } else {
+    head.innerHTML = 'Almost done &mdash; confirm on WhatsApp';
+    body.innerHTML = 'Your details are on their way to the studio. Tap below and Vicky will '
+                   + 'confirm your spot &mdash; that message is how we make sure nothing gets missed.';
+  }
+
   document.getElementById('enrol').style.display = 'none';
   document.getElementById('thanks').style.display = 'block';
   window.scrollTo({top:0, behavior:'smooth'});
