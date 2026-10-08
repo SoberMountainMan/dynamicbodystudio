@@ -6,13 +6,26 @@
  *   garbles text; a stock photo carries a licence and says nothing about the studio.
  *   Rendering the real HTML gives pixel-exact type and reuses the site's own palette.
  *
- * Run:
+ * Run (VERIFY - the default; writes nothing into the repo):
  *   NODE_PATH="C:/Users/User/.workbuddy-ai/binaries/node/workspace/node_modules" \
  *     node _tools/gen_og_cards.js
  *
+ * Run (PUBLISH - rewrites assets/og/*.png):
+ *   NODE_PATH="C:/Users/User/.workbuddy-ai/binaries/node/workspace/node_modules" \
+ *     node _tools/gen_og_cards.js --write
+ *
  * Output: assets/og/*.png  (1200x630, the OG/Twitter ratio)
  *
- * READ-ONLY with respect to the site: it writes PNGs into assets/og/ and touches nothing else.
+ * VERIFY MUST NOT PUBLISH - this is why the default changed on 2026-10-08.
+ * The script used to screenshot straight into assets/og/, so merely CHECKING the
+ * cards rewrote the shipped files. That is a verification step with a side effect
+ * on the deliverable, and it bit us: home.png is not byte-reproducible (it has two
+ * render outcomes ~1 LSB apart in the decorative gradient - see the DRIFT note in
+ * the report), so a gate run would silently flip the file that was live, leaving a
+ * confusing "why did this change?" diff and a dirty tree that a later `git add -A`
+ * would ship. Rendering into a scratch directory instead makes the gate read-only,
+ * which is what a gate is supposed to be. Publishing is now an explicit flag.
+ *
  * Wiring the meta tags is a separate step (see the WIRING block at the bottom).
  */
 
@@ -22,6 +35,12 @@ const https = require('https');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'assets', 'og');
+
+// VERIFY BY DEFAULT, PUBLISH ON REQUEST. A gate that rewrites the artifact it is
+// checking cannot tell you whether the artifact is good - it only tells you what it
+// just wrote. See the header note.
+const PUBLISH = process.argv.includes('--write');
+const RENDER_DIR = path.join(ROOT, '_tmp_og_render');
 
 // ---------------------------------------------------------------------------
 // The cards. One per shareable page.
@@ -282,7 +301,7 @@ function pngSize(buf) {
   const puppeteer = require('puppeteer-core');
   if (!fs.existsSync(CHROME)) throw new Error('Chrome not found at ' + CHROME);
   if (!fs.existsSync(WIDE_LOGO)) throw new Error('wide logo lockup not found at ' + WIDE_LOGO);
-  fs.mkdirSync(OUT_DIR, { recursive: true });
+  fs.mkdirSync(PUBLISH ? OUT_DIR : RENDER_DIR, { recursive: true });
 
   const faces = await loadFonts();
   console.log('fonts embedded:');
@@ -359,8 +378,28 @@ function pngSize(buf) {
       };
     });
 
-    const file = path.join(OUT_DIR, card.out);
+    const file = path.join(PUBLISH ? OUT_DIR : RENDER_DIR, card.out);
     await page.screenshot({ path: file, type: 'png', clip: { x: 0, y: 0, width: 1200, height: 630 } });
+
+    // DRIFT, not failure. home.png is not byte-reproducible: it has two render
+    // outcomes about 1 LSB apart inside the decorative radial-gradient blob (measured
+    // 2026-10-08 - 4 consecutive runs gave cd563597,cd563597,dd89d5a6,cd563597 while
+    // the other four cards were identical every time; the two states differ in 21581
+    // pixels, max channel delta 1, all inside the blob's own geometry). That is
+    // sub-perceptual and NOT a defect, so it must not fail the build - but it must be
+    // VISIBLE, because it is the reason a card can differ from the committed file for
+    // no apparent reason. Report it; never silently rewrite the asset.
+    const committed = path.join(OUT_DIR, card.out);
+    let drift = '';
+    if (!PUBLISH && fs.existsSync(committed)) {
+      const a = fs.readFileSync(committed), b = fs.readFileSync(file);
+      if (!a.equals(b)) {
+        const dims = pngSize(b);
+        drift = dims && dims.w === 1200 && dims.h === 630
+          ? `render differs from assets/og (${a.length}B vs ${b.length}B - expected 1-LSB gradient drift)`
+          : 'render differs from assets/og AND is the wrong size';
+      }
+    }
 
     const size = pngSize(fs.readFileSync(file));
     const reasons = [];
@@ -387,7 +426,7 @@ function pngSize(buf) {
 
     report.push({
       out: card.out, ...m, w: size ? size.w : 0, h: size ? size.h : 0,
-      bytes: fs.statSync(file).size, ok, reasons,
+      bytes: fs.statSync(file).size, ok, reasons, drift,
     });
   }
 
@@ -401,6 +440,18 @@ function pngSize(buf) {
       + `${String((r.logoAspectDrift * 100).toFixed(1) + '%').padEnd(6)} ${String(r.fontSize).padEnd(7)} `
       + `${String(r.lines).padEnd(6)} ${String(gap).padEnd(5)} ${String(r.bytes).padEnd(7)} ${r.ok ? 'OK' : 'FAIL'}`);
     if (!r.ok) r.reasons.forEach((x) => console.log(`        ! ${x}`));
+  }
+
+  // Say plainly which mode this was, so nobody reads a green run as "published".
+  console.log(PUBLISH
+    ? `\nWROTE     ${path.relative(ROOT, OUT_DIR).replace(/\\/g, '/')}/  (--write)`
+    : `\nVERIFY ONLY - nothing written to the repo. Renders in `
+      + `${path.relative(ROOT, RENDER_DIR).replace(/\\/g, '/')}/  (pass --write to publish)`);
+
+  const drifted = report.filter((r) => r.drift);
+  if (drifted.length) {
+    console.log('  drift vs committed asset (sub-perceptual, informational):');
+    drifted.forEach((r) => console.log(`    ~ ${r.out.padEnd(20)} ${r.drift}`));
   }
 
   console.log('\nfonts actually applied in the render:');

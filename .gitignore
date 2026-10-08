@@ -23,6 +23,10 @@ Thumbs.db
 *.tmp
 *.bak
 
+# Scratch dirs - verification must not dirty the tree
+/_tmp_verify/
+/_tmp_og_render/
+
 # Source logo files (web copies live in assets/)
 /-original_*.png
 /fblogo.jpg
