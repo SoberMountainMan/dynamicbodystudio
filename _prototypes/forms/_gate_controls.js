@@ -121,6 +121,32 @@ for (const [n, c] of caughtBy) {
 console.log('\n=== VERDICT ===');
 console.log(`  baseline clean       : ${baselineOk}`);
 console.log(`  every mutation caught: ${allCaught}`);
-console.log(baselineOk && allCaught
-  ? '\n  The standards are real: green on the shipped pages, red on every mutation.'
-  : '\n  SOMETHING SURVIVED - investigate before trusting the gate.');
+
+// --- the OTHER direction: a guard must not cry wolf --------------------------------
+// A check that fails a correct page gets switched off, so a false failure is its own
+// defect. The field-cap standard reads a rule KIND it can interpret (202 = maximum
+// character count, known by measurement). The owner is changing the indemnity to a
+// MINIMUM of 1 - an unrecognised kind. Reading that "1" as "max 1 character" would fail
+// the real page. This asserts the opposite, permanently, so the guard cannot regress
+// into a false alarm.
+const NO_FALSE_FAIL = [
+  ['rule kind 203 (a minimum) value ["1"]', { maxLen: null, unknownRule: { kind: 203, value: '["1"]' } }],
+  ['rule kind 999 (unknown)',               { maxLen: null, unknownRule: { kind: 999, value: '["x"]' } }],
+  ['no rule at all',                        {}],
+];
+const CAP = 'field caps: page respects the form limit';
+let noFalseFails = true;
+console.log('\n=== MUST NOT FAIL (a guard that cries wolf gets switched off) ===');
+for (const [label, item] of NO_FALSE_FAIL) {
+  const live = Object.assign({}, LIVE['dance-academy.html'], {
+    items: [Object.assign({ eid: 903878165, label: 'Indemnity', type: 1, required: true, options: [] }, item)],
+  });
+  const src = fs.readFileSync(path.join(ROOT, 'dance-academy.html'), 'utf8');
+  const ok = standards(src, live)[CAP] === true;
+  if (!ok) noFalseFails = false;
+  console.log(`  ${ok ? 'ok  ' : '*** FALSE FAIL ***'}  ${label}`);
+}
+
+console.log(baselineOk && allCaught && noFalseFails
+  ? '\n  The standards are real: green on the shipped pages, red on every mutation, and quiet on rules they cannot read.'
+  : '\n  SOMETHING SURVIVED OR A FALSE FAIL APPEARED - investigate before trusting the gate.');
