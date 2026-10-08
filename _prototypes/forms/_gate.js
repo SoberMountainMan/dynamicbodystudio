@@ -80,10 +80,28 @@ async function liveFields(id) {
   // The description (d[1][0]) is where the client puts DATES - e.g. "30 November - 19 December 2026".
   // We shipped a page for months without it, because this gate only ever read the question items.
   // Title is d[1][8]. Return both so every run prints them.
+  // EMAIL COLLECTION IS A FORM-LEVEL SETTING, NOT A QUESTION. It renders as an "Email *" box
+  // above question 1, so it NEVER appears in the item list above - and we shipped the academy
+  // page for a month while the form REQUIRED it, which rejected every submission from it.
+  //
+  // Measured 2026-10-08, three forms, by rendering the published form and submitting it empty:
+  //   d[1][10][6] === 3  -> the academy form. Renders a required "Email *" input; an empty
+  //                         submit is refused with "Email * This is a required question"; the
+  //                         real POST body carries `emailAddress`.
+  //   d[1][10][6] === 1  -> studio and ballet. 0 email inputs, no such error.
+  // Three samples is a thin basis for a constant, so an UNRECOGNISED value warns instead of
+  // silently passing. That is the type=9 lesson: never let a guessed constant fail quietly.
+  const emailFlag = data?.[1]?.[10]?.[6] ?? null;
+  const EMAIL_FLAG_COLLECTS = 3;
+  const EMAIL_FLAG_KNOWN = [1, 3];
+
   return {
     items: out,
     title: data?.[1]?.[8] ?? '',
     desc:  data?.[1]?.[0] ?? '',
+    emailFlag,
+    collectsEmail: emailFlag === EMAIL_FLAG_COLLECTS,
+    emailFlagKnown: EMAIL_FLAG_KNOWN.includes(emailFlag),
   };
 }
 
@@ -160,9 +178,22 @@ function preflightCall(src) {
   return m ? { url: m[1], opts: m[2] } : null;
 }
 
-function standards(src) {
+/**
+ * The name of the page's email input, or null if it has none.
+ * Read from the input TAG, so attribute order does not matter - a check that only matched
+ * `type` before `name` would silently report "no email field" for a valid input.
+ */
+function emailInputName(src) {
+  const tag = src.match(/<input[^>]*type=["']email["'][^>]*>/i);
+  if (!tag) return null;
+  const n = tag[0].match(/name=["']([^"']*)["']/i);
+  return n ? n[1] : '';
+}
+
+function standards(src, live) {
   const heads = panelHeadings(src);
   const pf = preflightCall(src);
+  const emailName = emailInputName(src);
 
   // SUBMISSION-TRUST (owner 2026-10-08). A static page cannot know whether Google
   // accepted a submission: the hidden iframe fires onload for a rejection page and for
@@ -196,6 +227,13 @@ function standards(src) {
     // Probe the POST host before submitting - the only real transport signal available.
     // Read from the parsed call, so the comment cannot satisfy it.
     'reachability preflight':  !!pf && /generate_204/.test(pf.url) && /no-cors/.test(pf.opts),
+
+    // --- email collection (2026-10-08) -----------------------------------------
+    // The form-level "Collect email addresses" setting is invisible to the item list, and
+    // leaving it unposted rejected every academy submission. These two checks tie the page
+    // to the form's actual setting, so it cannot silently drift again.
+    'email: present iff the form wants it': !live || (live.collectsEmail === (emailName !== null)),
+    'email: posted as emailAddress':        emailName === null || emailName === 'emailAddress',
   };
   return checks;
 }
@@ -255,6 +293,11 @@ function standards(src) {
     console.log(`\n=== ${f.name} (${f.file}) ===`);
     console.log(`  form title : ${live.title}`);
     if (live.desc) console.log(`  description: ${live.desc.trim()}`);
+    // Form-level email collection. Printed every run so a change on Google's side is VISIBLE
+    // rather than silent - the flag value is the only place this setting is observable.
+    console.log(`  email field: ${live.collectsEmail ? 'COLLECTED (required)' : 'not collected'}`
+      + `  [d[1][10][6]=${live.emailFlag}]`
+      + (live.emailFlagKnown ? '' : '   ** UNRECOGNISED FLAG VALUE - the mapping may have changed **'));
 
     // The client puts DATES in the description, not in a question. If it names a year the page
     // never mentions, the page is likely advertising the wrong season. Warning, not a failure:
@@ -278,7 +321,7 @@ function standards(src) {
       blockers.forEach(b => console.log(`      ~ ${b}`));
     }
 
-    const std = standards(src);
+    const std = standards(src, live);
     const failed = Object.entries(std).filter(([, v]) => !v).map(([k]) => k);
     console.log(`  standards      : ${Object.values(std).filter(Boolean).length}/${Object.keys(std).length}` +
                 (failed.length ? `  FAIL:${JSON.stringify(failed)}` : ''));

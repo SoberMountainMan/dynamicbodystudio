@@ -65,7 +65,12 @@ async function run(file, formId, label, setup, waitMs) {
   });
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 900 });
-  await page.goto('file:///' + path.join(ROOT, file).replace(/\\/g, '/'), { waitUntil: 'load' });
+  await page.goto('file:///' + path.join(ROOT, file).replace(/\\/g, '/'),
+    { waitUntil: 'domcontentloaded', timeout: 60000 });
+  // Wait for the page's own submit handler to exist. Without this, requestSubmit() can fire
+  // before the inline script has parsed, and the form submits natively - a probe that
+  // silently measures a different code path than the one it means to test.
+  await page.waitForFunction(() => typeof window.submitForm === 'function', { timeout: 20000 });
 
   const seen = { probe: 0, post: 0 };
   await page.setRequestInterception(true);
