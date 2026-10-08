@@ -48,6 +48,12 @@
   .hero{text-align:center;padding:44px 20px 24px}
   .hero h1{font-family:var(--serif);font-weight:500;color:var(--ink);font-size:clamp(1.7rem,4.5vw,2.4rem);line-height:1.15;margin-bottom:10px}
   .hero p{max-width:540px;margin:0 auto;font-size:1rem}
+  /* Key date, kept in the header so a parent sees it without scrolling.
+     SOURCE OF TRUTH is Vicky's form: the registration-day checkbox label.
+     If she moves that date, change this line too. */
+  /* .hero p sets `margin:0 auto`, so this needs to out-specify it — hence .hero p.hero-date */
+  .hero p.hero-date{display:inline-block;margin:16px auto 0;background:#fff;border:1.5px solid var(--blue-soft);border-radius:999px;padding:9px 20px;font-size:.92rem;font-weight:500;color:var(--ink)}
+  .hero p.hero-date strong{color:var(--pink)}
 
   form{padding-bottom:60px}
   fieldset{border:none;margin-bottom:26px}
@@ -120,6 +126,7 @@
   <div class="wrap">
     <h1>Dynamic Dance Academy 2026</h1>
     <p>Enrol for the year. Classical, Tap, Hip hop, Contemporary and more, ages 4 to 18.</p>
+    <p class="hero-date">Registration day: <strong>21 November 2026</strong></p>
     <p class="print-head">The Dynamic Body Studio &middot; 12 Strangers Way, Dorchester Heights, East London &middot; 061 587 5852</p>
   </div>
 </section>
