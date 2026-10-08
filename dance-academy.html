@@ -159,9 +159,14 @@
         action="https://docs.google.com/forms/d/e/1FAIpQLSebxWQdjCNynd54xYgWCmeKOJ2i01pqzXktQAQwulba8MgK1w/formResponse"
         onsubmit="return submitForm()">
 
+    <!-- Google Forms plumbing.
+         fbzx REMOVED 2026-10-08. It is NOT a form constant - it is a PER-SESSION token
+         that changes on every page load, so any value baked into a static page is stale
+         by definition. A stale token is a rejected post, which is why a real submission
+         showed "Thanks" and never reached the sheet. A static page cannot fetch a fresh
+         one (CORS), so we send none - the documented first remedy. -->
     <input type="hidden" name="fvv" value="1">
     <input type="hidden" name="pageHistory" value="0">
-    <input type="hidden" name="fbzx" value="-6551682399620843297">
 
     <fieldset>
       <legend>The dancer</legend>

@@ -160,9 +160,14 @@
         action="https://docs.google.com/forms/d/e/1FAIpQLSdEv2X_6RxEyls1uzopEZ9L0VUf2szAHLSz847LRCnrJPpUCA/formResponse"
         onsubmit="return submitForm()">
 
+    <!-- Google Forms plumbing.
+         fbzx REMOVED 2026-10-08. It is NOT a form constant - it is a PER-SESSION token
+         that changes on every page load, so any value baked into a static page is stale
+         by definition. A stale token is a rejected post, which is why a real submission
+         showed "Thanks" and never reached the sheet. A static page cannot fetch a fresh
+         one (CORS), so we send none - the documented first remedy. -->
     <input type="hidden" name="fvv" value="1">
     <input type="hidden" name="pageHistory" value="0">
-    <input type="hidden" name="fbzx" value="1769488907475069364">
 
     <!-- DELIBERATE OMISSION - do not "fix" this without reading.
          entry.1964413680 - an untitled radio whose only option is literally "Option 1".
@@ -173,11 +178,19 @@
          entry.2009902291 is NOT a file upload. We mis-read its type code as FILE for a
          month, which invented a blocker that never existed. Corrected 2026-10-08 against
          the published render: it is a REQUIRED DATE field with no question title,
-         displaying as "Date / yyyy/mm/dd". Google accepts only ISO YYYY-MM-DD (verified:
-         "2026-10-08" accepted; "08/10/2026" and "2026-13-45" rejected). It sits between
-         the media-consent question and the attire notice - the signing date - so we stamp
-         the submission date rather than asking the parent. -->
-    <input type="hidden" name="entry.2009902291" id="submissionDate">
+         displaying as "Date / yyyy/mm/dd".
+
+         SUBMIT CONTRACT - measured by rendering the real form in headless Chrome and reading
+         the input elements, NOT inferred. A Forms date question posts as THREE fields:
+             entry.2009902291_year / entry.2009902291_month / entry.2009902291_day
+         It does NOT post as entry.2009902291=<date>. Google's PREFILL api accepts the
+         one-field form and converts it internally, which is what misled us.
+
+         It sits between the media-consent question and the attire notice - the signing
+         date - so we stamp the submission date rather than asking the parent. -->
+    <input type="hidden" name="entry.2009902291_year"  id="dateYear">
+    <input type="hidden" name="entry.2009902291_month" id="dateMonth">
+    <input type="hidden" name="entry.2009902291_day"   id="dateDay">
 
     <fieldset>
       <legend>Your ballerina</legend>
@@ -292,15 +305,14 @@ function submitForm(){
   }
   document.getElementById('formErr').style.display = 'none';
 
-  // Stamp the required DATE field (entry.2009902291) with today, in ISO YYYY-MM-DD.
-  // Google accepts ONLY that shape - a wrong format is silently dropped, so this is
-  // built from local date parts rather than toISOString(), which shifts to UTC and
-  // would post yesterday's date for anyone filling this in before 02:00 SAST.
+  // Stamp the required DATE field with today. A Google Forms date question posts as
+  // three separate fields (_year/_month/_day) - NOT as one ISO string. Built from local
+  // date parts, never toISOString(), which shifts to UTC and would post yesterday's date
+  // for anyone enrolling before 02:00 SAST.
   var d = new Date();
-  document.getElementById('submissionDate').value =
-    d.getFullYear() + '-' +
-    String(d.getMonth() + 1).padStart(2, '0') + '-' +
-    String(d.getDate()).padStart(2, '0');
+  document.getElementById('dateYear').value  = d.getFullYear();
+  document.getElementById('dateMonth').value = d.getMonth() + 1;
+  document.getElementById('dateDay').value   = d.getDate();
 
   submitted = true;
   return true;

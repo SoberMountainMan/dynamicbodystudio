@@ -88,10 +88,41 @@ async function liveFields(id) {
 }
 
 function postedFields(src) {
-  // every name="entry.NNNN" in the prototype
+  // Every name="entry.NNNN..." in the prototype. Capture the FULL suffix, not just the
+  // digits: a DATE question posts as entry.NNNN_year/_month/_day, so a digits-only match
+  // cannot see it and would report a posted field as missing.
   const names = new Set();
-  for (const mm of src.matchAll(/name=["']entry\.(\d+)["']/g)) names.add(Number(mm[1]));
+  for (const mm of src.matchAll(/name=["']entry\.([0-9A-Za-z_]+)["']/g)) names.add(mm[1]);
   return names;
+}
+
+/**
+ * Is this live question posted by the page?
+ * DATE (type 9) is the special case: Google renders it as three hidden inputs
+ * (_year/_month/_day) and never as a single entry.NNNN. Measured by rendering the real
+ * form in headless Chrome and reading the input elements - see ORCHESTRATOR.md.
+ * Returns { ok, detail } so a partial date (year but no month) is visible, not silent.
+ */
+function isPosted(posted, q) {
+  if (q.type === 9) {
+    const parts = ['_year', '_month', '_day'];
+    const have = parts.filter((p) => posted.has(String(q.eid) + p));
+    return {
+      ok: have.length === 3,
+      detail: have.length === 3 ? '' : `DATE posted as ${have.length}/3 parts (${have.map((h) => 'entry.' + q.eid + h).join(', ') || 'none'})`,
+    };
+  }
+  return { ok: posted.has(String(q.eid)), detail: '' };
+}
+
+/** Which posted names belong to no live question (allowing for the date parts). */
+function strayFields(posted, items) {
+  const allowed = new Set();
+  for (const q of items) {
+    if (q.type === 9) { allowed.add(`${q.eid}_year`); allowed.add(`${q.eid}_month`); allowed.add(`${q.eid}_day`); }
+    else allowed.add(String(q.eid));
+  }
+  return [...posted].filter((n) => !allowed.has(n)).map((n) => 'entry.' + n);
 }
 
 function optionValues(src, eid) {
@@ -114,7 +145,11 @@ function standards(src) {
     'posts to gforms':  /docs\.google\.com\/forms\/d\/e\/[^/]+\/formResponse/.test(src),
     'hidden iframe':    /<iframe[^>]+name=["']hidden_iframe["']/i.test(src),
     'onsubmit guard':   /onsubmit=["']return\s+\w+\(\)/i.test(src),
-    'fbzx token':       /name=["']fbzx["']\s+value=["']-?\d+["']/.test(src),
+    // WAS 'fbzx token present'. fbzx is a PER-SESSION token, not a form constant - a value
+    // baked into a static page is stale by definition, and a stale one gets the post
+    // rejected. Measured 2026-10-08: two loads of the same form returned different tokens.
+    // So the correct standard is now that we send NO fbzx at all.
+    'no stale fbzx':    !/name=["']fbzx["']/.test(src),
     'fvv+pageHistory':  /name=["']fvv["']/.test(src) && /name=["']pageHistory["']/.test(src),
     'print css':        /@media\s+print/.test(src),
   };
@@ -145,17 +180,19 @@ function standards(src) {
     const skip = SKIP[f.id] ?? {};
 
     for (const q of live.items) {
-      if (!posted.has(q.eid)) {
+      const p = isPosted(posted, q);
+      if (!p.ok) {
         const line = `entry.${q.eid} [${TYPE[q.type] ?? q.type}] "${q.label.slice(0, 45)}"` +
                      `${q.required ? ' REQUIRED' : ''}` +
-                     (q.options.length ? `  opts=${JSON.stringify(q.options)}` : '');
+                     (q.options.length ? `  opts=${JSON.stringify(q.options)}` : '') +
+                     (p.detail ? `\n         ${p.detail}` : '');
         if (skip[q.eid]) blockers.push(`${line}\n         SKIPPED ON PURPOSE: ${skip[q.eid]}`);
         else {
-          // A DATE is just a value - we can post it. So an unposted DATE is our bug, not hers.
+          // A DATE is postable from a static page - it is three hidden inputs, not a file.
+          // So an unposted DATE is OUR bug, not a client one.
           const hint = q.type === 9
-            ? '\n         DATE field - postable from a static page, so this is OUR gap, not a client one.'
-            + '\n         Needs a value (date of submission is the likely intent).'
-            + ' POST format NOT yet verified - determine it by test, do not guess.'
+            ? `\n         DATE must post as entry.${q.eid}_year / _month / _day.`
+            + ' A single entry.' + q.eid + '=YYYY-MM-DD is the PREFILL shape, not the submit shape.'
             : '';
           defects.push(line + hint);
         }
@@ -169,7 +206,7 @@ function standards(src) {
       }
     }
 
-    const stray = [...posted].filter(n => !live.items.some(q => q.eid === n));
+    const stray = strayFields(posted, live.items);
 
     console.log(`\n=== ${f.name} (${f.file}) ===`);
     console.log(`  form title : ${live.title}`);
