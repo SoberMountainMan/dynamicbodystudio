@@ -74,7 +74,6 @@
   #thanks h2{font-family:var(--serif);font-weight:500;color:var(--ink);margin-bottom:10px}
   #thanks p{margin-bottom:18px}
 
-  .upload-note{background:#fff8fb;border:1.5px solid var(--pink);border-radius:12px;padding:14px 16px;font-size:.88rem;margin-bottom:20px}
 
   /* Closed-for-the-season notice — see the SEASONAL STATE block below */
   .closed{background:var(--soft);border:1.5px solid #ddd;border-radius:14px;padding:22px;margin:0 0 26px}
@@ -88,7 +87,7 @@
 
   /* ---- Print: Vicky asked to print these ---- */
   @media print{
-    header .nav a, .submit-row, .upload-note, footer, #thanks, .btn-print{display:none !important}
+    header .nav a, .submit-row, footer, #thanks, .btn-print{display:none !important}
     body{background:#fff;color:#000}
     .hero{padding:0 0 16px}
     .hero h1{font-size:22pt}
@@ -141,8 +140,8 @@
          2. Delete this .closed block.
          3. Update the "Closed for 2026" line in the hero.
          4. Update index.html's seasonal banner and forms.html.
-       Before reopening, Vicky must make entry.2009902291 (file upload)
-       optional - see the DELIBERATE OMISSIONS note under the form.
+       (entry.2009902291 is a required DATE, not a file upload - we post it. The only
+       remaining client nit is the junk "Option 1" radio, which is optional and harmless.)
        ============================================================ -->
   <div class="closed">
     <h2>Enrolment for 2026 has closed</h2>
@@ -159,23 +158,20 @@
     <input type="hidden" name="pageHistory" value="0">
     <input type="hidden" name="fbzx" value="1769488907475069364">
 
-    <!-- DELIBERATE OMISSIONS - do not "fix" these without reading.
-         1. entry.2009902291 - FILE upload, marked REQUIRED in Vicky's form.
-            A static page cannot carry a file on a cross-origin POST, so this page
-            never posts it. If the field stays REQUIRED the submission may be
-            rejected outright. ACTION ON VICKY: set it to optional, or keep using
-            the original Google Form for anyone who needs to upload.
-         2. entry.1964413680 - an untitled radio whose only option is literally
-            "Option 1". That is a Google Forms default artifact, not a real
-            question. It is optional, so omitting it records blank.
-            ACTION ON VICKY: delete this field from the form.
-         Both are tracked in _prototypes/forms/_gate.js SKIP and in ORCHESTRATOR.md. -->
+    <!-- DELIBERATE OMISSION - do not "fix" this without reading.
+         entry.1964413680 - an untitled radio whose only option is literally "Option 1".
+         That is a Google Forms default artifact, not a real question. It is optional,
+         so omitting it records blank. ACTION ON VICKY: delete this field from the form.
+         Tracked in _prototypes/forms/_gate.js SKIP and in ORCHESTRATOR.md.
 
-    <div class="upload-note">
-      <strong>Photo upload:</strong> this form cannot take uploads. Please WhatsApp a photo to
-      Vicky on 061 587 5852, or use the
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLSdEv2X_6RxEyls1uzopEZ9L0VUf2szAHLSz847LRCnrJPpUCA/viewform" target="_blank" rel="noopener">original form</a>.
-    </div>
+         entry.2009902291 is NOT a file upload. We mis-read its type code as FILE for a
+         month, which invented a blocker that never existed. Corrected 2026-10-08 against
+         the published render: it is a REQUIRED DATE field with no question title,
+         displaying as "Date / yyyy/mm/dd". Google accepts only ISO YYYY-MM-DD (verified:
+         "2026-10-08" accepted; "08/10/2026" and "2026-13-45" rejected). It sits between
+         the media-consent question and the attire notice - the signing date - so we stamp
+         the submission date rather than asking the parent. -->
+    <input type="hidden" name="entry.2009902291" id="submissionDate">
 
     <fieldset>
       <legend>Your ballerina</legend>
@@ -289,6 +285,17 @@ function submitForm(){
     return false;
   }
   document.getElementById('formErr').style.display = 'none';
+
+  // Stamp the required DATE field (entry.2009902291) with today, in ISO YYYY-MM-DD.
+  // Google accepts ONLY that shape - a wrong format is silently dropped, so this is
+  // built from local date parts rather than toISOString(), which shifts to UTC and
+  // would post yesterday's date for anyone filling this in before 02:00 SAST.
+  var d = new Date();
+  document.getElementById('submissionDate').value =
+    d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+
   submitted = true;
   return true;
 }

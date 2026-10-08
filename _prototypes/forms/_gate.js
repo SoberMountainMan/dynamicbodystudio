@@ -33,15 +33,12 @@ const ROOT = 'C:/WildLogic/dynamicbodystudio/';
  * Anything listed here is an open action for Vicky, not a closed decision.
  */
 const SKIP = {
-  // Studio enrolment - required file upload
-  '1FAIpQLScUjlphaXJ6ksgb_6ytG1qITaeXotwPHDWMG0FdgS-SIDGBfg': {
-    859802356: 'FILE upload, REQUIRED in her form. Cannot post a file cross-origin. '
-             + 'VICKY ACTION: make optional, else submissions may be rejected.',
-  },
-  // Twinkle Toes - required file upload + a junk placeholder field
+  // Twinkle Toes - one junk placeholder field.
+  // NOTE 2026-10-08: the two entries that used to live here ("FILE upload, REQUIRED ... cannot
+  // post a file cross-origin") were WRONG - those fields are DATES, which post fine. Removing
+  // them from SKIP is the point: they are now reported as DEFECTS, because not posting them is
+  // our gap, not a client blocker.
   '1FAIpQLSdEv2X_6RxEyls1uzopEZ9L0VUf2szAHLSz847LRCnrJPpUCA': {
-    2009902291: 'FILE upload, REQUIRED in her form. Cannot post a file cross-origin. '
-              + 'VICKY ACTION: make optional, else submissions may be rejected.',
     1964413680: 'Untitled radio whose only option is literally "Option 1" - a Google Forms '
               + 'default artifact, not a real question. Optional, so blank is fine. '
               + 'VICKY ACTION: delete the field.',
@@ -49,7 +46,13 @@ const SKIP = {
 };
 
 // FB_PUBLIC_LOAD_DATA_ item types we care about.
-const TYPE = { 0:'SHORT', 1:'PARA', 2:'RADIO', 3:'DROPDOWN', 4:'CHECKBOX', 5:'LINEAR', 9:'FILE', 7:'GRID' };
+// 9 = DATE, *not* file upload. VERIFIED 2026-10-08 against the published render: both
+// entry.859802356 (studio) and entry.2009902291 (ballet) render as a "Date / yyyy/mm/dd"
+// box, and they are the only type=9 items in the whole estate.
+// This entry used to read 9:'FILE'. That one wrong constant invented a "required file upload"
+// blocker that did not exist, and it held two finished pages back from parents for a month.
+// Unknown codes print as their raw number ON PURPOSE - never guess a code from memory.
+const TYPE = { 0:'SHORT', 1:'PARA', 2:'RADIO', 3:'DROPDOWN', 4:'CHECKBOX', 5:'LINEAR', 7:'GRID', 9:'DATE' };
 
 async function liveFields(id) {
   const res = await fetch(`https://docs.google.com/forms/d/e/${id}/viewform`, {
@@ -147,7 +150,15 @@ function standards(src) {
                      `${q.required ? ' REQUIRED' : ''}` +
                      (q.options.length ? `  opts=${JSON.stringify(q.options)}` : '');
         if (skip[q.eid]) blockers.push(`${line}\n         SKIPPED ON PURPOSE: ${skip[q.eid]}`);
-        else defects.push(line);   // not in SKIP = I have no excuse, this is my bug
+        else {
+          // A DATE is just a value - we can post it. So an unposted DATE is our bug, not hers.
+          const hint = q.type === 9
+            ? '\n         DATE field - postable from a static page, so this is OUR gap, not a client one.'
+            + '\n         Needs a value (date of submission is the likely intent).'
+            + ' POST format NOT yet verified - determine it by test, do not guess.'
+            : '';
+          defects.push(line + hint);
+        }
         continue;
       }
       matched++;
@@ -182,7 +193,7 @@ function standards(src) {
       defects.forEach(b => console.log(`      ! ${b}`));
     }
     if (blockers.length) {
-      console.log(`  BLOCKERS (FILE upload - needs Vicky, not fixable here):`);
+      console.log(`  BLOCKERS (cannot be fixed in the page - needs a client/owner action):`);
       blockers.forEach(b => console.log(`      ~ ${b}`));
     }
 

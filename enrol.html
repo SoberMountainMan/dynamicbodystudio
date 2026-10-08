@@ -73,7 +73,6 @@
   #thanks h2{font-family:var(--serif);font-weight:500;color:var(--ink);margin-bottom:10px}
   #thanks p{margin-bottom:18px}
 
-  .upload-note{background:#fff8fb;border:1.5px solid var(--pink);border-radius:12px;padding:14px 16px;font-size:.88rem;margin-bottom:20px}
 
   footer{background:var(--charcoal);color:#e8e8e8;padding:30px 0;text-align:center;font-size:.88rem}
   footer a{color:var(--blue-soft);text-decoration:none}
@@ -82,7 +81,7 @@
 
   /* ---- Print: Vicky asked to print these ---- */
   @media print{
-    header .nav a, .submit-row, .upload-note, footer, #thanks, .btn-print{display:none !important}
+    header .nav a, .submit-row, footer, #thanks, .btn-print{display:none !important}
     body{background:#fff;color:#000}
     .hero{padding:0 0 16px}
     .hero h1{font-size:22pt}
@@ -131,19 +130,18 @@
     <input type="hidden" name="pageHistory" value="0">
     <input type="hidden" name="fbzx" value="775085190342046526">
 
-    <!-- DELIBERATE OMISSION - do not "fix" this without reading.
-         entry.859802356 is a FILE upload marked REQUIRED in Vicky's form.
-         A static page cannot carry a file on a cross-origin POST, so this page
-         never posts it. While it stays REQUIRED the submission may be rejected
-         outright. ACTION ON VICKY: set it to optional, or keep using the original
-         Google Form for anyone who needs to upload.
-         Tracked in _prototypes/forms/_gate.js SKIP and in ORCHESTRATOR.md. -->
+    <!-- entry.859802356 is a REQUIRED DATE field in Vicky's form - and it has NO question title.
+         It is NOT a file upload. We mis-read its type code as FILE for a month, which invented a
+         blocker that never existed and kept this finished page away from parents. Corrected
+         2026-10-08 against the published form render: it displays as "Date / yyyy/mm/dd".
 
-    <div class="upload-note">
-      <strong>Need to upload a file?</strong> This form cannot accept uploads &mdash; use the
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLScUjlphaXJ6ksgb_6ytG1qITaeXotwPHDWMG0FdgS-SIDGBfg/viewform" target="_blank" rel="noopener">full enrolment form</a>
-      for that, or WhatsApp it to Vicky.
-    </div>
+         Google VALIDATES this field and accepts only ISO YYYY-MM-DD. Verified by prefill probe:
+         "2026-10-08" is accepted; "08/10/2026", "not-a-date" and "2026-13-45" are all rejected.
+         So the value must be exact, not merely present.
+
+         The bare "Date" sits between "I will pay via" and the liability waiver - on the paper form
+         this is the signing date, so we stamp the submission date rather than asking the parent. -->
+    <input type="hidden" name="entry.859802356" id="submissionDate">
 
     <fieldset>
       <legend>About you</legend>
@@ -266,6 +264,17 @@ function submitForm(){
     return false;
   }
   document.getElementById('formErr').style.display = 'none';
+
+  // Stamp the required DATE field (entry.859802356) with today, in ISO YYYY-MM-DD.
+  // Google accepts ONLY that shape - a wrong format is silently dropped, so this is
+  // built from local date parts rather than toISOString(), which shifts to UTC and
+  // would post yesterday's date for anyone filling this in before 02:00 SAST.
+  var d = new Date();
+  document.getElementById('submissionDate').value =
+    d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+
   submitted = true;
   return true;   // post to the hidden iframe, stay on the page
 }
