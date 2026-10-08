@@ -74,7 +74,14 @@ async function liveFields(id) {
     const req   = !!(q[2] & 1);
     if (typeof eid === 'number') out.push({ eid, label, type, required: req, options: opts });
   }
-  return out;
+  // The description (d[1][0]) is where the client puts DATES - e.g. "30 November - 19 December 2026".
+  // We shipped a page for months without it, because this gate only ever read the question items.
+  // Title is d[1][8]. Return both so every run prints them.
+  return {
+    items: out,
+    title: data?.[1]?.[8] ?? '',
+    desc:  data?.[1]?.[0] ?? '',
+  };
 }
 
 function postedFields(src) {
@@ -134,7 +141,7 @@ function standards(src) {
 
     const skip = SKIP[f.id] ?? {};
 
-    for (const q of live) {
+    for (const q of live.items) {
       if (!posted.has(q.eid)) {
         const line = `entry.${q.eid} [${TYPE[q.type] ?? q.type}] "${q.label.slice(0, 45)}"` +
                      `${q.required ? ' REQUIRED' : ''}` +
@@ -151,10 +158,22 @@ function standards(src) {
       }
     }
 
-    const stray = [...posted].filter(n => !live.some(q => q.eid === n));
+    const stray = [...posted].filter(n => !live.items.some(q => q.eid === n));
 
     console.log(`\n=== ${f.name} (${f.file}) ===`);
-    console.log(`  fields matched : ${matched}/${live.length}`);
+    console.log(`  form title : ${live.title}`);
+    if (live.desc) console.log(`  description: ${live.desc.trim()}`);
+
+    // The client puts DATES in the description, not in a question. If it names a year the page
+    // never mentions, the page is likely advertising the wrong season. Warning, not a failure:
+    // a description may legitimately look ahead to next year.
+    const descYears = [...new Set(live.desc.match(/\b20\d{2}\b/g) ?? [])];
+    const missingYears = descYears.filter(y => !src.includes(y));
+    if (missingYears.length) {
+      console.log(`  WARNING    : form description names ${missingYears.join(', ')} - the page never does`);
+    }
+
+    console.log(`  fields matched : ${matched}/${live.items.length}`);
     console.log(`  stray ids      : ${stray.length ? stray.map(n => 'entry.' + n).join(', ') : 'none'}`);
     console.log(`  bad options    : ${badOpts.length}`);
     badOpts.forEach(b => console.log(`      BAD ${b}`));
@@ -173,7 +192,7 @@ function standards(src) {
                 (failed.length ? `  FAIL:${JSON.stringify(failed)}` : ''));
 
     if (badOpts.length || stray.length || failed.length || defects.length) hardFail = true;
-    summary.push({ name: f.name, matched, total: live.length, badOpts: badOpts.length,
+    summary.push({ name: f.name, matched, total: live.items.length, badOpts: badOpts.length,
                    stray: stray.length, std: `${Object.values(std).filter(Boolean).length}/${Object.keys(std).length}`,
                    defects: defects.length, blockers: blockers.length });
   }
