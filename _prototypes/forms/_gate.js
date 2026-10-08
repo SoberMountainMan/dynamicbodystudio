@@ -75,7 +75,16 @@ async function liveFields(id) {
     const eid   = q[0];
     const opts  = (q[1] ?? []).map(o => o[0]).filter(v => v && typeof v === 'string');
     const req   = !!(q[2] & 1);
-    if (typeof eid === 'number') out.push({ eid, label, type, required: req, options: opts });
+    // A FIELD-LEVEL VALIDATION RULE lives at q[4], and nothing else in the definition exposes
+    // it. Measured 2026-10-08: the academy indemnity carries q[4] = [[6,202,["10"]]] - a
+    // MAXIMUM LENGTH of 10. The page asked the parent for a 12-character phrase, so Google
+    // rejected EVERY academy submission with a 400 while every other check stayed green: the
+    // field NAME was right, the field was PRESENT, the options matched. Only the VALUE was
+    // impossible. Never encode this shape from memory - it was read off the live form.
+    const rule   = Array.isArray(q[4]) ? q[4][0] : null;
+    const maxLen = Array.isArray(rule) && rule[0] === 6 && Array.isArray(rule[2])
+      ? (Number(rule[2][0]) || null) : null;
+    if (typeof eid === 'number') out.push({ eid, label, type, required: req, options: opts, maxLen });
   }
   // The description (d[1][0]) is where the client puts DATES - e.g. "30 November - 19 December 2026".
   // We shipped a page for months without it, because this gate only ever read the question items.
@@ -133,8 +142,21 @@ function isPosted(posted, q) {
   return { ok: posted.has(String(q.eid)), detail: '' };
 }
 
-/** Which posted names belong to no live question (allowing for the date parts). */
-function strayFields(posted, items) {
+/**
+ * The page's own tag for a given entry id, so its value and maxlength can be read.
+ * Parses WHOLE TAGS and then pulls name/value out independently - an attribute-ORDER
+ * assumption here already produced a false "every option is missing" report once.
+ */
+function pageTag(src, eid) {
+  for (const m of src.matchAll(/<(?:input|textarea)\b[^>]*>/g)) {
+    const t = m[0];
+    const n = t.match(/\bname=["']entry\.(\d+)["']/);
+    if (n && n[1] === String(eid)) return t;
+  }
+  return null;
+}
+
+/** Which posted names belong to no live question (allowing for the date parts). */function strayFields(posted, items) {
   const allowed = new Set();
   for (const q of items) {
     if (q.type === 9) { allowed.add(`${q.eid}_year`); allowed.add(`${q.eid}_month`); allowed.add(`${q.eid}_day`); }
@@ -234,6 +256,23 @@ function standards(src, live) {
     // to the form's actual setting, so it cannot silently drift again.
     'email: present iff the form wants it': !live || (live.collectsEmail === (emailName !== null)),
     'email: posted as emailAddress':        emailName === null || emailName === 'emailAddress',
+
+    // --- field caps (2026-10-08) ------------------------------------------------
+    // A question can carry its OWN validation rule, and the page can satisfy every other
+    // check while still being unable to submit: right name, right place, valid options, and
+    // a VALUE the form refuses. That is exactly how the academy stayed broken - a
+    // 12-character phrase against a 10-character cap, rejected with a 400. So if the form
+    // caps a field, the page must enforce the same cap (maxlength) and must not carry a
+    // fixed value longer than the cap.
+    'field caps: page respects the form limit': !live || live.items.every((q) => {
+      if (!q.maxLen) return true;
+      const tag = pageTag(src, q.eid);
+      if (!tag) return true;
+      const fixed = tag.match(/\bvalue=["']([^"']*)["']/);
+      if (fixed && fixed[1].length > q.maxLen) return false;
+      const ml = tag.match(/\bmaxlength=["']?(\d+)/i);
+      return !!ml && Number(ml[1]) <= q.maxLen;
+    }),
   };
   return checks;
 }
@@ -298,6 +337,17 @@ function standards(src, live) {
     console.log(`  email field: ${live.collectsEmail ? 'COLLECTED (required)' : 'not collected'}`
       + `  [d[1][10][6]=${live.emailFlag}]`
       + (live.emailFlagKnown ? '' : '   ** UNRECOGNISED FLAG VALUE - the mapping may have changed **'));
+
+    // Field-level caps. Printed every run for the same reason as the email flag: this rule is
+    // observable NOWHERE else in the definition, and an unseen cap is an unsubmittable page.
+    for (const q of live.items) {
+      if (!q.maxLen) continue;
+      const tag = pageTag(src, q.eid);
+      const ml = tag && tag.match(/\bmaxlength=["']?(\d+)/i);
+      console.log(`  field cap  : entry.${q.eid} max ${q.maxLen} chars`
+        + `  | page ${ml ? 'maxlength=' + ml[1] : 'NO maxlength'}`
+        + `  | ${JSON.stringify(String(q.label || '').slice(0, 34))}`);
+    }
 
     // The client puts DATES in the description, not in a question. If it names a year the page
     // never mentions, the page is likely advertising the wrong season. Warning, not a failure:

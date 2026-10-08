@@ -13,7 +13,11 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..', '..');
 
 const gateSrc = fs.readFileSync(path.join(ROOT, '_prototypes', 'forms', '_gate.js'), 'utf8');
-const start = gateSrc.indexOf('function panelHeadings');
+// Slice from the FIRST helper standards() depends on, not from panelHeadings(). Slicing too
+// late silently drops helpers: pageTag() sat above the old start point, so the field-cap
+// standard could never run here and its mutations "survived" - a harness bug that looks
+// exactly like a passing check.
+const start = gateSrc.indexOf('function postedFields');
 const end = gateSrc.indexOf('(async () => {');
 if (start < 0 || end < 0) throw new Error('could not locate the functions in _gate.js');
 const { panelHeadings, preflightCall, emailInputName, standards } = new Function(
@@ -21,10 +25,14 @@ const { panelHeadings, preflightCall, emailInputName, standards } = new Function
 )();
 
 // The live facts each page is checked against. Measured from the published forms via
-// d[1][10][6]: the academy form collects email, the other two do not.
+// d[1][10][6]: the academy form collects email, the other two do not. The academy's item
+// list carries the ONE field-level cap in the estate - the indemnity, max 10 characters
+// (q[4] = [[6,202,["10"]]]). Without it in here the field-cap standard cannot fire, and its
+// mutations would pass no matter what the page said.
 const LIVE = {
   'enrol.html':         { collectsEmail: false, emailFlag: 1, emailFlagKnown: true, items: [], title: '', desc: '' },
-  'dance-academy.html': { collectsEmail: true,  emailFlag: 3, emailFlagKnown: true, items: [], title: '', desc: '' },
+  'dance-academy.html': { collectsEmail: true,  emailFlag: 3, emailFlagKnown: true, title: '', desc: '',
+                          items: [{ eid: 903878165, label: 'Indemnity', type: 1, required: true, options: [], maxLen: 10 }] },
   'twinkle-toes.html':  { collectsEmail: false, emailFlag: 1, emailFlagKnown: true, items: [], title: '', desc: '' },
 };
 const PAGES = Object.keys(LIVE);
@@ -32,6 +40,7 @@ const PAGES = Object.keys(LIVE);
 const WATCHED = [
   'panel: no receipt claim', 'panel: refusal states', 'offline guard', 'reachability preflight',
   'email: present iff the form wants it', 'email: posted as emailAddress',
+  'field caps: page respects the form limit',
 ];
 
 function report(label, src, live) {
@@ -79,6 +88,13 @@ const MUTATIONS = [
   ['email added where the form wants none', (s) => s.replace(
     /<form id="([a-z]+)" method="post"/,
     '<form id="$1" method="post"><input type="email" name="emailAddress" required>')],
+  // field caps - the FOURTH cause of the failed submission. The academy indemnity is capped
+  // at 10 characters by the form; the page asked for a 12-character phrase, so Google
+  // rejected every academy submission with a 400. Both directions must be caught.
+  ['field cap ignored (maxlength exceeds the form limit)', (s) => s.replace(
+    /maxlength="10"/g, 'maxlength="99"')],
+  ['field cap dropped entirely (no maxlength)', (s) => s.replace(
+    / required maxlength="10" placeholder="I ACCEPT"/, ' required placeholder="I ACCEPT"')],
 ];
 
 console.log('\n=== CONTROLS (mutations of the REAL pages) ===');

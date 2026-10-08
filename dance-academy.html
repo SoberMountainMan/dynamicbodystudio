@@ -288,9 +288,9 @@
 
     <div class="box">
       <p><strong>Indemnity.</strong> The applicant and their guardian acknowledge that the applicant enters the dance academy at their own risk, and hereby indemnify and hold harmless the organisers against any loss or damage arising out of participation in the academy and any activities directly or indirectly related to it, whether caused by negligence or not.</p>
-      <label class="req">Type or confirm YES I ACCEPT</label>
-      <input type="text" id="d6" name="entry.903878165" required placeholder="YES I ACCEPT" pattern="\s*(?i:yes\s+i\s+accept)\s*" title="Please type YES I ACCEPT">
-      <p class="err" id="indemErr">Please type YES I ACCEPT.</p>
+      <label class="req">Type I ACCEPT to confirm</label>
+      <input type="text" id="d6" name="entry.903878165" required maxlength="10" placeholder="I ACCEPT" pattern="\s*(?i:i\s+accept)\s*" title="Please type I ACCEPT">
+      <p class="err" id="indemErr">Please type I ACCEPT.</p>
     </div>
 
     <div class="box">
@@ -348,8 +348,13 @@ function submitForm(){
   } else document.getElementById('styleErr').style.display='none';
 
   // indemnity wording
+  // The phrase must fit the FORM's own cap: entry.903878165 carries a maxLength of 10
+  // (q[4] = [[6,202,["10"]]]). "YES I ACCEPT" is 12 characters and Google rejects the
+  // WHOLE submission with a 400 - which is exactly what it did. Measured: <=10 -> 200,
+  // 12 -> 400. The form's own label still says "Respond YES I ACCEPT", contradicting its
+  // own limit; "I ACCEPT" (8) is the shortest faithful phrase that fits.
   var indem = document.getElementById('d6');
-  if(!/^\s*yes\s+i\s+accept\s*$/i.test(indem.value)){
+  if(!/^\s*i\s+accept\s*$/i.test(indem.value)){
     document.getElementById('indemErr').style.display='block'; ok=false;
   } else document.getElementById('indemErr').style.display='none';
 
