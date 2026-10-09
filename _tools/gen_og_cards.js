@@ -36,6 +36,12 @@ const https = require('https');
 const ROOT = path.resolve(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'assets', 'og');
 
+// Declared here, not with the other asset paths further down: CARDS (below) needs the
+// academy path at module-evaluation time, and a `const` referenced before its
+// declaration throws at once ("Cannot access 'ACADEMY_LOGO' before initialization") -
+// --check does not catch this, because it is true syntax and an execution-order fault.
+const ACADEMY_LOGO = path.join(ROOT, 'assets', 'dance-academy-logo.png');
+
 // VERIFY BY DEFAULT, PUBLISH ON REQUEST. A gate that rewrites the artifact it is
 // checking cannot tell you whether the artifact is good - it only tells you what it
 // just wrote. See the header note.
@@ -93,7 +99,13 @@ const CARDS = [
     title: 'Dynamic Dance Academy',
     sub: 'Classical, Tap, Hip hop, Contemporary and more \u00b7 ages 4 to 18',
     cta: 'Enrol a dancer',
-    accent: 'pink',
+    // TEAL, not pink - see the PALETTE note. Pink on this card reads as girls' ballet
+    // for a school that enrols boys and girls across four styles.
+    accent: 'teal',
+    // The academy has its own mark. `ownMark` swaps the logo AND switches the CSS
+    // sizing rule (stacked lockup, sized by height) - see LOGO_CSS above.
+    logo: ACADEMY_LOGO,
+    ownMark: true,
   },
   {
     out: 'twinkle-toes.png',
@@ -133,12 +145,30 @@ if (process.env.OG_CARD_CONTROL_LONG) {
 }
 const LOGO_CSS = process.env.OG_CARD_CONTROL_LOGO
   ? '.logo{height:76px;width:auto;margin-bottom:auto}'   // the bug, verbatim
-  : '.logo{width:404px;height:auto;align-self:flex-start;margin-bottom:auto}';
+  : '.logo{width:404px;height:auto;align-self:flex-start;margin-bottom:auto}'
+  // The academy card carries the ACADEMY mark instead of the studio lockup. It is a
+  // stacked lockup (250x169, ~1.48:1) where the studio one is a wide 3.9:1 lockup, so it
+  // gets its own sizing: size by HEIGHT and let width follow, otherwise it consumes the
+  // whole headline row. align-self:flex-start is still load-bearing (see above).
+  // Height is 130, not 150: at 150 the academy card's subline sat only 10px off the
+  // footer rule (the other cards sit at 33-77px), which reads as a near-collision even
+  // though it technically passes. The gate can measure a gap but not whether it looks
+  // right, so this number comes from looking at the render.
+  + '\n.logo.academy{height:130px;width:auto;align-self:flex-start;margin-bottom:auto}';
 
 const PALETTE = {
   blue: '#68ADD9',
   blueSoft: '#93B1D4',
   pink: '#E75B98',
+  pinkSoft: '#ED8FB6',
+  // NEUTRAL ACCENT (owner 2026-10-09). The academy card was pink, which reads as
+  // "girls' ballet" - wrong for a school that teaches classical, tap, hip hop and
+  // contemporary to ages 4 to 18, boys and girls alike. A pink card on the academy
+  // page quietly narrows the intake the page exists to fill. Teal reads as
+  // stage/dance without gendering the audience; pink stays on Twinkle Toes, where
+  // the audience genuinely is mostly girls.
+  teal: '#3FA8A0',
+  tealSoft: '#7FC9C3',
   charcoal: '#5D5F5E',
   ink: '#333333',
   bg: '#FEFEFE',
@@ -227,9 +257,19 @@ function dataUri(file) {
 // literal: a stray backtick inside a comment silently terminates the string.
 // ---------------------------------------------------------------------------
 function cardHtml(card, faces, logoSrc) {
-  const accent = PALETTE[card.accent === 'pink' ? 'pink' : 'blue'];
-  const accentSoft = PALETTE[card.accent === 'pink' ? 'pink' : 'blueSoft'];
-
+  // A card may carry its OWN mark. The academy has its own branding and its own page,
+  // so its card must not show the studio lockup - a shared preview image under a
+  // different brand is the same error as a shared page heading.
+  // `logoSrc` is already resolved per card by the caller; `isAcademy` only decides
+  // which sizing rule applies (see the LOGO_CSS note - the two marks have wildly
+  // different aspect ratios and one rule cannot serve both).
+  const logoClass = card.ownMark ? 'logo academy' : 'logo';
+  // Resolve the accent by NAME, not by a blue/pink binary - the academy needs a third
+  // accent and the old ternary would have silently painted it blue.
+  const accentKey = PALETTE[card.accent] ? card.accent : 'blue';
+  const softKey = accentKey + 'Soft';
+  const accent = PALETTE[accentKey];
+  const accentSoft = PALETTE[softKey] || PALETTE.blueSoft;
   const fontCss = faces.map((f) =>
     "@font-face{font-family:'" + f.fam + "';font-style:normal;font-weight:" + f.range
     + ";src:url(data:font/woff2;base64," + f.b64 + ") format('woff2');font-display:block}"
@@ -259,8 +299,15 @@ function cardHtml(card, faces, logoSrc) {
     LOGO_CSS,
     '.kicker{font-size:22px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:'
       + accent + ';margin-bottom:18px}',
+    // Headline box = the full content width (1200 - 86 left - 72 right = 1042). It was
+    // 900, which wrapped "The Dynamic Body Studio" (995px) and "Dynamic Dance Academy"
+    // (984px) to two lines while every other card sat on one - an inconsistent set, and
+    // two extra lines steal the space the subline needs. Every shipped title is under
+    // 1042px at this size (measured 2026-10-09: 995 / 558 / 551 / 984 / 760), so one box
+    // serves them all and the set reads alike. The font size is NOT reduced - the type
+    // stays 82px and the box simply stops clipping it early.
     'h1{font-family:\'Bodoni Moda\',Georgia,serif;font-weight:600;font-size:82px;line-height:1.06;'
-      + 'letter-spacing:-.01em;color:' + PALETTE.ink + ';max-width:900px}',
+      + 'letter-spacing:-.01em;color:' + PALETTE.ink + ';max-width:1042px}',
     '.sub{font-size:27px;font-weight:400;line-height:1.45;color:' + PALETTE.charcoal + ';margin-top:22px;max-width:860px}',
     '.foot{margin-top:auto;padding-top:26px;border-top:2px solid ' + hexA(PALETTE.charcoal, .16) + ';'
       + 'display:flex;justify-content:space-between;align-items:baseline;font-size:23px;font-weight:500}',
@@ -269,7 +316,7 @@ function cardHtml(card, faces, logoSrc) {
     '</style></head><body>',
     '<div class="edge"></div><div class="blob p"></div><div class="blob b"></div>',
     '<div class="card">',
-    '<img class="logo" src="' + logoSrc + '" alt="">',
+    '<img class="' + logoClass + '" src="' + logoSrc + '" alt="">',
     '<div class="kicker">' + esc(card.kicker) + '</div>',
     '<h1 id="h">' + esc(card.title) + '</h1>',
     '<div class="sub" id="s">' + esc(card.sub) + '</div>',
@@ -307,7 +354,9 @@ function pngSize(buf) {
   console.log('fonts embedded:');
   faces.forEach((f) => console.log(`  ${f.fam.padEnd(14)} weight ${f.range.padEnd(8)} ${f.bytes} B`));
   const logoSrc = dataUri(WIDE_LOGO);
-  console.log(`logo embedded : ${fs.statSync(WIDE_LOGO).size} B`);
+  console.log(`logo embedded : ${fs.statSync(WIDE_LOGO).size} B  (studio lockup, shared)`);
+  if (!fs.existsSync(ACADEMY_LOGO)) throw new Error('academy logo not found at ' + ACADEMY_LOGO);
+  console.log(`              : ${fs.statSync(ACADEMY_LOGO).size} B  (academy mark, dance-academy.png only)`);
 
   const browser = await puppeteer.launch({
     executablePath: CHROME,
@@ -322,7 +371,10 @@ function pngSize(buf) {
   let failed = false;
 
   for (const card of CARDS) {
-    const html = cardHtml(card, faces, logoSrc);
+    // Resolve the mark PER CARD. A card that names its own logo gets it; everything
+    // else falls back to the studio lockup.
+    const cardLogo = card.logo ? dataUri(card.logo) : logoSrc;
+    const html = cardHtml(card, faces, cardLogo);
     await page.setContent(html, { waitUntil: 'load' });
     await page.evaluate(() => document.fonts.ready);
 
@@ -378,18 +430,33 @@ function pngSize(buf) {
       };
     });
 
-    const file = path.join(PUBLISH ? OUT_DIR : RENDER_DIR, card.out);
+    // Always render into scratch, then copy into the repo ONLY if the bytes differ.
+    // Screenshotting straight into assets/og/ in --write mode rewrote every card on
+    // every publish, so publishing a one-card change also churned home.png's gradient
+    // (the two 1-LSB states) and left a two-file diff where one file was intended.
+    // Comparing first means --write touches exactly the cards that changed.
+    const file = path.join(RENDER_DIR, card.out);
     await page.screenshot({ path: file, type: 'png', clip: { x: 0, y: 0, width: 1200, height: 630 } });
+
+    const committed = path.join(OUT_DIR, card.out);
+    let wrote = false;
+    if (PUBLISH) {
+      const before = fs.existsSync(committed) ? fs.readFileSync(committed) : null;
+      if (!before || !before.equals(fs.readFileSync(file))) {
+        fs.copyFileSync(file, committed);
+        wrote = true;
+      }
+    }
 
     // DRIFT, not failure. home.png is not byte-reproducible: it has two render
     // outcomes about 1 LSB apart inside the decorative radial-gradient blob (measured
     // 2026-10-08 - 4 consecutive runs gave cd563597,cd563597,dd89d5a6,cd563597 while
     // the other four cards were identical every time; the two states differ in 21581
-    // pixels, max channel delta 1, all inside the blob's own geometry). That is
+    // pixels, max channel delta 1, all inside the blob's own geometry - re-measured
+    // 2026-10-09 at 23053 subpixels, max delta 1, same signature). That is
     // sub-perceptual and NOT a defect, so it must not fail the build - but it must be
     // VISIBLE, because it is the reason a card can differ from the committed file for
     // no apparent reason. Report it; never silently rewrite the asset.
-    const committed = path.join(OUT_DIR, card.out);
     let drift = '';
     if (!PUBLISH && fs.existsSync(committed)) {
       const a = fs.readFileSync(committed), b = fs.readFileSync(file);
@@ -426,11 +493,21 @@ function pngSize(buf) {
 
     report.push({
       out: card.out, ...m, w: size ? size.w : 0, h: size ? size.h : 0,
-      bytes: fs.statSync(file).size, ok, reasons, drift,
+      bytes: fs.statSync(file).size, ok, reasons, drift, wrote,
     });
   }
 
-  await browser.close();
+  // All rendering is DONE at this point. Closing Chrome has hung indefinitely in this
+  // environment (measured 2026-10-09: the launch takes 500ms and all five cards render,
+  // but `await browser.close()` never resolves, so the process was killed by the caller
+  // and the ENTIRE report was lost to an unflushed buffer - a run that had already
+  // succeeded looked like a hang with no output). Never let teardown eat the result:
+  // report first, then try to close, and exit explicitly either way.
+  const closeWithTimeout = (ms) => Promise.race([
+    browser.close().catch(() => {}),
+    new Promise((r) => setTimeout(r, ms)),
+  ]);
+  await closeWithTimeout(5000);
 
   console.log('\n--- CARDS ---');
   console.log('  file                 size        logoBox    drift  headPx  lines  gap   bytes   verdict');
@@ -443,10 +520,16 @@ function pngSize(buf) {
   }
 
   // Say plainly which mode this was, so nobody reads a green run as "published".
-  console.log(PUBLISH
-    ? `\nWROTE     ${path.relative(ROOT, OUT_DIR).replace(/\\/g, '/')}/  (--write)`
-    : `\nVERIFY ONLY - nothing written to the repo. Renders in `
+  if (PUBLISH) {
+    const n = report.filter((r) => r.wrote).length;
+    console.log(`\nWROTE     ${path.relative(ROOT, OUT_DIR).replace(/\\/g, '/')}/  (--write)  `
+      + `${n} of ${report.length} card(s) changed`);
+    report.filter((r) => r.wrote).forEach((r) => console.log(`    + ${r.out}`));
+    if (!n) console.log('    (no card differed - nothing written)');
+  } else {
+    console.log(`\nVERIFY ONLY - nothing written to the repo. Renders in `
       + `${path.relative(ROOT, RENDER_DIR).replace(/\\/g, '/')}/  (pass --write to publish)`);
+  }
 
   const drifted = report.filter((r) => r.drift);
   if (drifted.length) {
@@ -487,7 +570,45 @@ function pngSize(buf) {
     problems.forEach((x) => console.log(`        ! ${x}`));
   }
 
+  // -------------------------------------------------------------------------
+  // BRANDING PER PAGE. The academy has its own mark, so its page must actually
+  // show it - a header still carrying the studio lockup, or a favicon still
+  // pointing at it, is the same bug as a card showing the wrong logo, just in a
+  // place this gate was not looking. The check reads the SHIPPED page, not the
+  // generator's intent, because those can disagree silently.
+  // -------------------------------------------------------------------------
+  console.log('\n--- PAGE BRANDING ---');
+  const BRAND = [
+    {
+      page: 'dance-academy.html',
+      want: 'assets/dance-academy-logo.png',
+      mustNot: 'Dynamic Studios-Transparent.png',
+      label: 'academy mark',
+    },
+  ];
+  for (const b of BRAND) {
+    const src = fs.readFileSync(path.join(ROOT, b.page), 'utf8');
+    const problems = [];
+    // the mark must appear in BOTH the header brand and the icon links
+    const inHeader = /<div class="brand">[\s\S]*?<\/div>/.test(src)
+      && (src.match(/<div class="brand">[\s\S]*?<\/div>/) || [''])[0].includes(b.want);
+    if (!inHeader) problems.push(`header .brand does not reference ${b.want}`);
+    const iconLinks = src.match(/<link rel="(?:icon|apple-touch-icon)"[^>]*>/g) || [];
+    const iconsRight = iconLinks.length > 0 && iconLinks.every((l) => l.includes(b.want));
+    if (!iconsRight) problems.push(`icon link(s) do not all point at ${b.want} (${iconLinks.length} found)`);
+    // the studio lockup must NOT be the header mark on this page
+    const brandBlock = (src.match(/<div class="brand">[\s\S]*?<\/div>/) || [''])[0];
+    if (b.mustNot && brandBlock.includes(b.mustNot)) {
+      problems.push(`header .brand still carries the studio lockup (${b.mustNot})`);
+    }
+    if (problems.length) failed = true;
+    console.log(`  ${b.page.padEnd(20)} ${b.label.padEnd(14)} ${problems.length ? 'FAIL' : 'OK'}`);
+    problems.forEach((x) => console.log(`        ! ${x}`));
+  }
+
   console.log(failed ? '\nCARDS: FAIL' : '\nCARDS: PASS');
+  // Explicit exit: a dangling Chrome or a stray timer would otherwise keep the process
+  // alive after the report is printed, which reads as a hang.
   process.exit(failed ? 1 : 0);
 })();
 
