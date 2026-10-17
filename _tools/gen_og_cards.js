@@ -78,17 +78,23 @@ const CARDS = [
     accent: 'blue',
   },
   {
-    out: 'enrol.png',
-    kicker: 'Enrol online',
-    title: 'Join the studio',
+    // The HUB page (forms.html, h1 "Join us"). It used to borrow the enrol card, so a
+    // share of the hub looked like the enrol page. Owner 2026-10-18: "enrol.html and
+    // forms.html need og images" - they had images, but not their OWN. Card title now
+    // carries the page's headline, like the other three.
+    out: 'forms.png',
+    kicker: 'Enrol & forms',
+    title: 'Join us',
     sub: 'Dance Academy \u00b7 Twinkle Toes Ballet \u00b7 Studio classes',
-    cta: 'Start here',
+    cta: 'Choose your class',
     accent: 'pink',
   },
   {
-    out: 'studio.png',
+    // The STUDIO enrolment form (enrol.html, h1 "Join the studio"). Was 'studio.png'
+    // titled "Pilates classes", which did not match the page it sat on.
+    out: 'enrol.png',
     kicker: 'Studio enrolment',
-    title: 'Pilates classes',
+    title: 'Join the studio',
     sub: 'Tell us your goals and we will place you in the right class',
     cta: 'Enrol at the studio',
     accent: 'blue',
@@ -121,8 +127,8 @@ const CARDS = [
 // pointing at the wrong card - or at the old logo - fails the build.
 const PAGES = {
   'index.html': 'home.png',
-  'forms.html': 'enrol.png',
-  'enrol.html': 'studio.png',
+  'forms.html': 'forms.png',
+  'enrol.html': 'enrol.png',
   'dance-academy.html': 'dance-academy.png',
   'twinkle-toes.html': 'twinkle-toes.png',
 };
@@ -187,7 +193,10 @@ const WIDE_LOGO = path.join(ROOT, 'Dynamic Studios-Transparent.png');
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                  + '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-function fetchBuf(url) {
+// MEASURED 2026-10-17/18 on this line: node's sockets die with ETIMEDOUT (AggregateError - IPv4
+// timed out, IPv6 ENETUNREACH) on roughly 2 of 3 attempts, while curl fetches the same URL fine.
+// One attempt turns a flaky line into a crashed build, so retry before believing the failure.
+function fetchOnce(url) {
   return new Promise((resolve, reject) => {
     https.get(url, { headers: { 'User-Agent': BROWSER_UA } }, (r) => {
       if (r.statusCode !== 200) return reject(new Error(`HTTP ${r.statusCode} for ${url}`));
@@ -196,6 +205,36 @@ function fetchBuf(url) {
       r.on('end', () => resolve(Buffer.concat(chunks)));
     }).on('error', reject);
   });
+}
+
+// CACHE ON DISK. The line to Google Fonts is intermittently dead here (ETIMEDOUT on IPv4,
+// ENETUNREACH on IPv6, 4 attempts in a row on 2026-10-18), and a build tool that needs the
+// network to render a card is a build tool that fails for reasons that have nothing to do
+// with the card. First fetch caches; every later run is offline and byte-identical.
+const CACHE_DIR = path.join(__dirname, '_fontcache');
+function cacheKey(url) {
+  const h = require('crypto').createHash('sha1').update(url).digest('hex').slice(0, 16);
+  const ext = (url.match(/\.([a-z0-9]+)(?:[?#]|$)/i) || [])[1] || 'bin';
+  return path.join(CACHE_DIR, `${h}.${ext}`);
+}
+
+async function fetchBuf(url, attempts = 4) {
+  const file = cacheKey(url);
+  if (fs.existsSync(file)) return fs.readFileSync(file);
+  let lastErr;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      const buf = await fetchOnce(url);
+      fs.mkdirSync(CACHE_DIR, { recursive: true });
+      fs.writeFileSync(file, buf);
+      return buf;
+    }
+    catch (e) {
+      lastErr = e;
+      if (i < attempts) await new Promise((r) => setTimeout(r, 800 * i));
+    }
+  }
+  throw lastErr;
 }
 
 /**
