@@ -8,7 +8,8 @@
  * READ ONLY. It scrapes the public form definition JSON. It never submits anything.
  *
  * Run:  node _gate.js
- * Exit: 0 = all green (or only known blockers), 1 = a real defect found.
+ * Exit: 0 = all green (or only known blockers), 1 = a real defect found, 2 = could not read the
+ *       form (transport). "Could not measure" is NOT "measured and wrong" - see the verdict block.
  *
  * WHY THIS EXISTS:
  *   Google hides most entry ids inside a JS blob (FB_PUBLIC_LOAD_DATA_). Grepping the
@@ -54,10 +55,32 @@ const SKIP = {
 // Unknown codes print as their raw number ON PURPOSE - never guess a code from memory.
 const TYPE = { 0:'SHORT', 1:'PARA', 2:'RADIO', 3:'DROPDOWN', 4:'CHECKBOX', 5:'LINEAR', 7:'GRID', 9:'DATE' };
 
+const BASE = process.env.GATE_BASE || 'https://docs.google.com';
+const ATTEMPTS = Number(process.env.GATE_ATTEMPTS || 3);
+
 async function liveFields(id) {
-  const res = await fetch(`https://docs.google.com/forms/d/e/${id}/viewform`, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-  });
+  // MEASURED 2026-10-17 on this line: 2 of 3 fetches died with ETIMEDOUT (AggregateError - both
+  // IPv4 and IPv6) while curl fetched the same page every time. One attempt turns a flaky line
+  // into a verdict, so retry before believing a failure.
+  let res = null, lastErr = null;
+  for (let i = 1; i <= ATTEMPTS; i++) {
+    try {
+      res = await fetch(`${BASE}/forms/d/e/${id}/viewform`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+      });
+      lastErr = null;
+      break;
+    } catch (e) {
+      lastErr = e;
+      if (i < ATTEMPTS) await new Promise(r => setTimeout(r, 700 * i));
+    }
+  }
+  if (lastErr) {
+    // TRANSPORT, not a code defect. Tagged so the verdict can never call this a bug in our pages.
+    const err = new Error(`${lastErr.name}: ${lastErr.cause?.code || lastErr.message} after ${ATTEMPTS} attempt(s)`);
+    err.transport = true;
+    throw err;
+  }
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${id}`);
   const html = await res.text();
 
@@ -296,6 +319,7 @@ function standards(src, live) {
 
 (async () => {
   let hardFail = false;
+  let unreachable = 0;
   const summary = [];
 
   for (const f of FORMS) {
@@ -305,7 +329,7 @@ function standards(src, live) {
       live = await liveFields(f.id);
     } catch (e) {
       console.log(`\n${f.name}: CANNOT VERIFY - ${e.message}`);
-      hardFail = true;
+      if (e.transport) unreachable++; else hardFail = true;
       continue;
     }
 
@@ -435,6 +459,14 @@ function standards(src, live) {
     ? `  ** ${totalUnchecked} field(s) NOT CHECKED - unrecognised rule kind, verify by hand **`
     : '';
 
+  // THREE outcomes, because "could not measure" is not "measured and wrong". A transport failure
+  // reported as FAIL trains the reader to ignore FAIL - the same mistake as counting verdicts
+  // when the thing that failed was the transport.
+  if (unreachable) {
+    console.log(`\nGATE: CANNOT VERIFY - ${unreachable} of ${FORMS.length} form(s) unreadable (transport, NOT a code defect)`
+      + (hardFail ? '; a real code defect is also present' : '') + uncheckedNote);
+    process.exit(2);
+  }
   console.log(hardFail
     ? '\nGATE: FAIL - code defects present' + uncheckedNote
     : '\nGATE: PASS - no code defects (blockers listed above are owner/client actions)' + uncheckedNote);
